@@ -1,0 +1,42 @@
+{
+  "app": {
+    "name": "Mimic App"
+  },
+  "tabs": {
+    "home": "Trang chủ",
+    "setting": "Cài đặt"
+  },
+  "home": {
+    "title": "Trang chủ",
+    "hello": "Xin chào, {{name}}"
+  },
+  "setting": {
+    "title": "Cài đặt",
+    "appearance": "Giao diện",
+    "light": "Sáng",
+    "dark": "Tối",
+    "primarySection": "Màu chủ đạo",
+    "primaryOrange": "Cam",
+    "primaryBlue": "Xanh dương",
+    "primaryGreen": "Xanh lá",
+    "primaryPurple": "Tím",
+    "primaryRed": "Đỏ",
+    "languageSection": "Ngôn ngữ",
+    "english": "Tiếng Anh",
+    "vietnamese": "Tiếng Việt"
+  },
+  "header": {
+    "menu": "Menu",
+    "setting": "Cài đặt",
+    "logout": "Đăng xuất"
+  },
+  "auth": {
+    "email": "Email",
+    "emailPlaceholder": "ban@email.com",
+    "password": "Mật khẩu",
+    "passwordPlaceholder": "••••••••",
+    "login": "Đăng nhập",
+    "errorRequired": "Vui lòng nhập email và mật khẩu",
+    "errorEmail": "Email không hợp lệ"
+  }
+}

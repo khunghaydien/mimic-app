@@ -1,0 +1,42 @@
+{
+  "app": {
+    "name": "Mimic App"
+  },
+  "tabs": {
+    "home": "Home",
+    "setting": "Setting"
+  },
+  "home": {
+    "title": "Home",
+    "hello": "Hello, {{name}}"
+  },
+  "setting": {
+    "title": "Setting",
+    "appearance": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
+    "primarySection": "Primary color",
+    "primaryOrange": "Orange",
+    "primaryBlue": "Blue",
+    "primaryGreen": "Green",
+    "primaryPurple": "Purple",
+    "primaryRed": "Red",
+    "languageSection": "Language",
+    "english": "English",
+    "vietnamese": "Vietnamese"
+  },
+  "header": {
+    "menu": "Menu",
+    "setting": "Setting",
+    "logout": "Log out"
+  },
+  "auth": {
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "login": "Sign in",
+    "errorRequired": "Email and password are required",
+    "errorEmail": "Enter a valid email"
+  }
+}
