@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -12,7 +13,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/api';
 import { AppButton, AppScreen, toast, useTheme } from '@/ui';
 
-export function LoginScreen() {
+type Props = {
+  onOpenRegister: () => void;
+};
+
+export function LoginScreen({ onOpenRegister }: Props) {
   const { t } = useTranslation();
   const { login } = useAuth();
   const { colors } = useTheme();
@@ -76,6 +81,10 @@ export function LoginScreen() {
           disabled={login.isPending}
           style={styles.submit}
         />
+
+        <Pressable onPress={onOpenRegister} style={styles.link}>
+          <Text style={styles.linkText}>{t('auth.goRegister')}</Text>
+        </Pressable>
       </KeyboardAvoidingView>
     </AppScreen>
   );
@@ -116,6 +125,15 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       marginTop: 20,
       alignSelf: 'stretch',
       minWidth: undefined,
+    },
+    link: {
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+    linkText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.primary,
     },
   });
 }

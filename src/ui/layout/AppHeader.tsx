@@ -13,12 +13,15 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/api';
-import { MenuIcon, LogoutIcon, SettingIcon } from '../icon';
+import { IconButton } from '../button';
+import { BackIcon, HomeIcon, MenuIcon, LogoutIcon, SettingIcon } from '../icon';
 import { useTheme } from '../theme';
 
 type Props = {
   title: string;
   onOpenSetting: () => void;
+  onHome?: () => void;
+  onBack?: () => void;
 };
 
 type Anchor = {
@@ -31,7 +34,7 @@ type Anchor = {
 const MENU_WIDTH = 260;
 const MENU_GAP = 6;
 
-export function AppHeader({ title, onOpenSetting }: Props) {
+export function AppHeader({ title, onOpenSetting, onHome, onBack }: Props) {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const { colors } = useTheme();
@@ -60,16 +63,6 @@ export function AppHeader({ title, onOpenSetting }: Props) {
     });
   };
 
-  const onSetting = () => {
-    closeMenu();
-    onOpenSetting();
-  };
-
-  const onLogout = () => {
-    closeMenu();
-    void logout();
-  };
-
   const windowWidth = Dimensions.get('window').width;
   const menuStyle = anchor
     ? {
@@ -80,19 +73,30 @@ export function AppHeader({ title, onOpenSetting }: Props) {
 
   return (
     <View style={[styles.header, { paddingTop: insets.top }]}>
+      <View style={styles.side}>
+        {onBack ? (
+          <IconButton label={t('header.back')} onPress={onBack}>
+            <BackIcon color={colors.text} />
+          </IconButton>
+        ) : onHome ? (
+          <IconButton label={t('tabs.home')} onPress={onHome}>
+            <HomeIcon color={colors.text} />
+          </IconButton>
+        ) : null}
+      </View>
+
       <Text style={styles.title} numberOfLines={1}>
         {title}
       </Text>
 
-      <View ref={menuBtnRef} collapsable={false}>
-        <Pressable
+      <View ref={menuBtnRef} collapsable={false} style={styles.side}>
+        <IconButton
+          label={t('header.menu')}
           onPress={openMenu}
-          style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}
-          accessibilityRole="button"
-          accessibilityLabel={t('header.menu')}
+          style={({ pressed }) => pressed && styles.pressed}
         >
           <MenuIcon color={colors.text} />
-        </Pressable>
+        </IconButton>
       </View>
 
       <Modal
@@ -129,7 +133,10 @@ export function AppHeader({ title, onOpenSetting }: Props) {
               <View style={styles.divider} />
 
               <Pressable
-                onPress={onSetting}
+                onPress={() => {
+                  closeMenu();
+                  onOpenSetting();
+                }}
                 style={({ pressed }) => [
                   styles.menuItem,
                   pressed && styles.pressed,
@@ -141,7 +148,10 @@ export function AppHeader({ title, onOpenSetting }: Props) {
               </Pressable>
 
               <Pressable
-                onPress={onLogout}
+                onPress={() => {
+                  closeMenu();
+                  void logout();
+                }}
                 style={({ pressed }) => [
                   styles.menuItem,
                   pressed && styles.pressed,
@@ -166,20 +176,23 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
+      paddingHorizontal: 8,
+      paddingBottom: 8,
       backgroundColor: colors.background,
       zIndex: 2,
+    },
+    side: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     title: {
       flex: 1,
       fontSize: 22,
       fontWeight: '700',
-      color: colors.primary,
-      marginRight: 12,
-    },
-    iconBtn: {
-      padding: 8,
+      color: colors.text,
+      textAlign: 'center',
     },
     pressed: {
       opacity: 0.65,

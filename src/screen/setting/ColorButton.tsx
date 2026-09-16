@@ -10,7 +10,6 @@ type Props = {
   onPress: () => void;
 };
 
-/** Setting-only color picker button. */
 export function ColorButton({ color, label, selected = false, onPress }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);

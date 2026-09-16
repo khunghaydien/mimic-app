@@ -9,7 +9,6 @@ type Props = {
   onPress: () => void;
 };
 
-/** Setting option — built on AppButton core with selected surface. */
 export function OptionButton({ label, selected = false, onPress }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);

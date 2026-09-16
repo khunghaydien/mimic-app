@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import { api } from '../QueryProvider';
+import { api, queryClient } from '../QueryProvider';
 import { AUTH_PATHS } from './const';
 
 const STORAGE_KEY = 'mimicapp.auth.session';
@@ -46,6 +46,10 @@ export class AuthProvider extends Component<
   state = { session: null as AuthSession | null, ready: false };
 
   async componentDidMount() {
+    api.onAuth = (session) => {
+      if (session) void this.setSession(session);
+      else void this.logout();
+    };
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     let session: AuthSession | null = null;
     try {
@@ -53,21 +57,26 @@ export class AuthProvider extends Component<
     } catch {
       await AsyncStorage.removeItem(STORAGE_KEY);
     }
-    api.setToken(session?.accessToken ?? null);
+    api.setAuth(session);
     this.setState({ session, ready: true });
   }
 
   setSession = async (session: AuthSession) => {
-    api.setToken(session.accessToken);
+    api.setAuth(session);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(session));
     this.setState({ session });
   };
 
   logout = async () => {
-    api.setToken(null);
+    api.setAuth(null);
+    queryClient.clear();
     await AsyncStorage.removeItem(STORAGE_KEY);
     this.setState({ session: null });
   };
+
+  componentWillUnmount() {
+    api.onAuth = null;
+  }
 
   render() {
     const { session, ready } = this.state;
@@ -93,5 +102,14 @@ export function useAuth() {
       api.request<AuthSession>(AUTH_PATHS.LOGIN, 'POST', body),
     onSuccess: auth.setSession,
   });
-  return { ...auth, login };
+  const register = useMutation({
+    mutationFn: (body: {
+      name: string;
+      email: string;
+      password: string;
+      avatarUrl?: string;
+    }) => api.request<AuthSession>(AUTH_PATHS.REGISTER, 'POST', body),
+    onSuccess: auth.setSession,
+  });
+  return { ...auth, login, register };
 }

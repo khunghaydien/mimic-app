@@ -13,15 +13,11 @@ type Props = {
   label: string;
   onPress: () => void;
   disabled?: boolean;
-  /** Override / extend default surface styles. */
   style?: ViewStyle;
-  /** Override / extend default label styles. */
   labelStyle?: TextStyle;
-  /** Extra a11y state (e.g. selected for option buttons). */
   accessibilityState?: { disabled?: boolean; selected?: boolean };
 };
 
-/** Core text button — other button variants compose on top of this. */
 export function AppButton({
   label,
   onPress,

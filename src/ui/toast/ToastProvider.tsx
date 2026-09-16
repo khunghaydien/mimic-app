@@ -1,53 +1,56 @@
-import { Component, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
+import { useTheme } from '../theme';
+
+type ToastType = 'success' | 'error';
+
 export const toast = {
-  show: (_type: 'success' | 'error', _message: string) => {},
+  show: (_type: ToastType, _message: string) => {},
 };
 
-export class ToastProvider extends Component<
-  { children: ReactNode },
-  { type: 'success' | 'error'; message: string }
-> {
-  state = { type: 'error' as 'success' | 'error', message: '' };
-  timer: ReturnType<typeof setTimeout> | null = null;
+export function ToastProvider({ children }: { children: ReactNode }) {
+  const { colors } = useTheme();
+  const [state, setState] = useState<{ type: ToastType; message: string }>({
+    type: 'error',
+    message: '',
+  });
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  componentDidMount() {
+  useEffect(() => {
     toast.show = (type, message) => {
-      this.setState({ type, message });
-      if (this.timer) {
-        clearTimeout(this.timer);
-      }
-      this.timer = setTimeout(() => this.setState({ message: '' }), 2800);
+      setState({ type, message });
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(
+        () => setState((current) => ({ ...current, message: '' })),
+        2800,
+      );
     };
-  }
+    return () => {
+      toast.show = () => undefined;
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
 
-  componentWillUnmount() {
-    toast.show = () => undefined;
-    if (this.timer) {
-      clearTimeout(this.timer);
-    }
-  }
-
-  render() {
-    const { type, message } = this.state;
-    return (
-      <>
-        {this.props.children}
-        {message ? (
-          <Pressable
-            onPress={() => this.setState({ message: '' })}
-            style={[
-              styles.toast,
-              { backgroundColor: type === 'success' ? '#16A34A' : '#D64545' },
-            ]}
-          >
-            <Text style={styles.text}>{message}</Text>
-          </Pressable>
-        ) : null}
-      </>
-    );
-  }
+  return (
+    <>
+      {children}
+      {state.message ? (
+        <Pressable
+          onPress={() => setState((current) => ({ ...current, message: '' }))}
+          style={[
+            styles.toast,
+            {
+              backgroundColor:
+                state.type === 'success' ? colors.success : colors.danger,
+            },
+          ]}
+        >
+          <Text style={styles.text}>{state.message}</Text>
+        </Pressable>
+      ) : null}
+    </>
+  );
 }
 
 const styles = StyleSheet.create({

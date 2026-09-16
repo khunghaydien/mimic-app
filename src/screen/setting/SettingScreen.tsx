@@ -2,10 +2,7 @@ import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import {
-  setAppLanguage,
-  type AppLanguage,
-} from '@/i18n';
+import { setAppLanguage, type AppLanguage } from '@/i18n';
 import { AppScreen, PRIMARY_PRESETS, useTheme } from '@/ui';
 
 import { ColorButton } from './ColorButton';

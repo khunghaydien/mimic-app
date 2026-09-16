@@ -4,10 +4,36 @@
   },
   "tabs": {
     "home": "Trang chủ",
+    "library": "Thư viện",
     "setting": "Cài đặt"
   },
+  "library": {
+    "title": "Thư viện",
+    "detailTitle": "Chi tiết thư viện",
+    "searchPlaceholder": "Tìm theo tiêu đề",
+    "create": "Tạo thư viện",
+    "empty": "Không có thư viện",
+    "fieldTitle": "Tiêu đề",
+    "fieldId": "ID",
+    "fieldCreator": "Người tạo",
+    "fieldQuestions": "Câu hỏi",
+    "fieldCreated": "Tạo lúc",
+    "fieldUpdated": "Cập nhật",
+    "titlePlaceholder": "Tên thư viện",
+    "questionLabel": "Câu hỏi {{index}}",
+    "questionPlaceholder": "Câu hỏi {{index}}",
+    "hintPlaceholder": "Gợi ý {{index}}",
+    "generate": "Sinh câu hỏi",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "deleteConfirmTitle": "Xóa thư viện",
+    "deleteConfirm": "Xóa \"{{title}}\"? Hành động này không thể hoàn tác.",
+    "cancel": "Hủy",
+    "errorTitle": "Tiêu đề không được trống",
+    "errorQuestion": "Câu hỏi không được trống"
+  },
   "home": {
-    "title": "Trang chủ",
     "hello": "Xin chào, {{name}}"
   },
   "setting": {
@@ -26,6 +52,7 @@
     "vietnamese": "Tiếng Việt"
   },
   "header": {
+    "back": "Quay lại",
     "menu": "Menu",
     "setting": "Cài đặt",
     "logout": "Đăng xuất"
@@ -36,7 +63,15 @@
     "password": "Mật khẩu",
     "passwordPlaceholder": "••••••••",
     "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "registerTitle": "Tạo tài khoản",
+    "name": "Tên",
+    "namePlaceholder": "Tên của bạn",
+    "goRegister": "Chưa có tài khoản? Đăng ký",
+    "goLogin": "Đã có tài khoản? Đăng nhập",
     "errorRequired": "Vui lòng nhập email và mật khẩu",
-    "errorEmail": "Email không hợp lệ"
+    "errorEmail": "Email không hợp lệ",
+    "errorName": "Tên phải từ 1–100 ký tự",
+    "errorPassword": "Mật khẩu phải từ 8–72 ký tự"
   }
 }

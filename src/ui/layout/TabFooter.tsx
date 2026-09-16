@@ -4,12 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MODULES, type ModuleId } from '@/modules';
-import { HomeIcon, SettingIcon } from '../icon';
+import { HomeIcon, LibraryIcon, SettingIcon } from '../icon';
 import type { IconProps } from '../icon/types';
 import { useTheme } from '../theme';
 
 const TAB_ICONS: Record<ModuleId, ComponentType<IconProps>> = {
   home: HomeIcon,
+  library: LibraryIcon,
   setting: SettingIcon,
 };
 

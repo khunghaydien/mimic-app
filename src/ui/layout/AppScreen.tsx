@@ -8,7 +8,6 @@ type ScreenProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** Shared screen chrome: full-bleed background. */
 export function AppScreen({ children, style }: ScreenProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -21,7 +20,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
     screen: {
       flex: 1,
       backgroundColor: colors.background,
-      paddingVertical: 16,
+      paddingBottom: 16,
     },
   });
 }

@@ -5,14 +5,17 @@ import { Appearance } from 'react-native';
 export type ThemeMode = 'light' | 'dark';
 export type PrimaryId = 'orange' | 'blue' | 'green' | 'purple' | 'red';
 
-export const PRIMARY_PRESETS: { id: PrimaryId; hex: string; labelKey: string }[] =
-  [
-    { id: 'orange', hex: '#FF7A00', labelKey: 'setting.primaryOrange' },
-    { id: 'blue', hex: '#2563EB', labelKey: 'setting.primaryBlue' },
-    { id: 'green', hex: '#16A34A', labelKey: 'setting.primaryGreen' },
-    { id: 'purple', hex: '#7C3AED', labelKey: 'setting.primaryPurple' },
-    { id: 'red', hex: '#E11D48', labelKey: 'setting.primaryRed' },
-  ];
+export const PRIMARY_PRESETS: {
+  id: PrimaryId;
+  hex: string;
+  labelKey: string;
+}[] = [
+  { id: 'orange', hex: '#FF7A00', labelKey: 'setting.primaryOrange' },
+  { id: 'blue', hex: '#2563EB', labelKey: 'setting.primaryBlue' },
+  { id: 'green', hex: '#16A34A', labelKey: 'setting.primaryGreen' },
+  { id: 'purple', hex: '#7C3AED', labelKey: 'setting.primaryPurple' },
+  { id: 'red', hex: '#E11D48', labelKey: 'setting.primaryRed' },
+];
 
 const light = {
   background: '#F5F6F8',
@@ -50,7 +53,7 @@ type ThemeValue = {
   setPrimaryId: (id: PrimaryId) => void;
 };
 
-export const ThemeContext = createContext<ThemeValue>({
+const ThemeContext = createContext<ThemeValue>({
   mode: 'light',
   primaryId: 'orange',
   colors: colorsOf('light', 'orange'),

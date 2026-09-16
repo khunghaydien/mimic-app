@@ -10,7 +10,13 @@ import {
 import { AuthProvider, QueryProvider, useAuth } from '@/api';
 import { loadSavedLanguage } from '@/i18n';
 import { type ModuleId } from '@/modules';
-import { HomeScreen, LoginScreen, SettingScreen } from '@/screen';
+import {
+  HomeScreen,
+  LibraryScreen,
+  LoginScreen,
+  RegisterScreen,
+  SettingScreen,
+} from '@/screen';
 import {
   AppHeader,
   TabFooter,
@@ -38,26 +44,32 @@ export default function App() {
 function AppRoot() {
   const { user, ready } = useAuth();
   const { colors, mode } = useTheme();
+  const [authScreen, setAuthScreen] = useState<'login' | 'register'>('login');
+  const styles = useMemo(
+    () => createStyles(colors.background),
+    [colors.background],
+  );
 
   useEffect(() => {
     void loadSavedLanguage();
   }, []);
 
-  const styles = useMemo(
-    () =>
-      StyleSheet.create({
-        root: {
-          flex: 1,
-          backgroundColor: colors.background,
-        },
-      }),
-    [colors.background],
-  );
+  useEffect(() => {
+    if (user) setAuthScreen('login');
+  }, [user]);
 
   return (
-    <View style={styles.root}>
+    <View style={styles.fill}>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
-      {ready ? (user ? <AppShell /> : <LoginScreen />) : null}
+      {ready ? (
+        user ? (
+          <AppShell />
+        ) : authScreen === 'register' ? (
+          <RegisterScreen onOpenLogin={() => setAuthScreen('login')} />
+        ) : (
+          <LoginScreen onOpenRegister={() => setAuthScreen('register')} />
+        )
+      ) : null}
     </View>
   );
 }
@@ -65,30 +77,67 @@ function AppRoot() {
 function AppShell() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const [activeId, setActiveId] = useState<ModuleId>('home');
-
   const styles = useMemo(
-    () =>
-      StyleSheet.create({
-        content: {
-          flex: 1,
-          backgroundColor: colors.background,
-        },
-      }),
+    () => createStyles(colors.background),
     [colors.background],
   );
+  const [activeId, setActiveId] = useState<ModuleId>('home');
+  const [libraryEditingId, setLibraryEditingId] = useState<
+    string | null | undefined
+  >(undefined);
+
+  const inLibraryForm = activeId === 'library' && libraryEditingId !== undefined;
+
+  const goHome = () => {
+    setActiveId('home');
+    setLibraryEditingId(undefined);
+  };
 
   return (
     <>
       <AppHeader
-        title={activeId === 'home' ? t('app.name') : t(`${activeId}.title`)}
-        onOpenSetting={() => setActiveId('setting')}
+        title={
+          inLibraryForm
+            ? t('library.detailTitle')
+            : activeId === 'home'
+              ? t('app.name')
+              : t(`${activeId}.title`)
+        }
+        onOpenSetting={() => {
+          setActiveId('setting');
+          setLibraryEditingId(undefined);
+        }}
+        onHome={activeId !== 'home' && !inLibraryForm ? goHome : undefined}
+        onBack={
+          inLibraryForm ? () => setLibraryEditingId(undefined) : undefined
+        }
       />
-      <View style={styles.content}>
+      <View style={styles.fill}>
         {activeId === 'home' ? <HomeScreen /> : null}
+        {activeId === 'library' ? (
+          <LibraryScreen
+            editingId={libraryEditingId}
+            onEditingIdChange={setLibraryEditingId}
+          />
+        ) : null}
         {activeId === 'setting' ? <SettingScreen /> : null}
       </View>
-      <TabFooter activeId={activeId} onSelect={setActiveId} />
+      <TabFooter
+        activeId={activeId}
+        onSelect={(id) => {
+          setActiveId(id);
+          if (id !== 'library') setLibraryEditingId(undefined);
+        }}
+      />
     </>
   );
+}
+
+function createStyles(backgroundColor: string) {
+  return StyleSheet.create({
+    fill: {
+      flex: 1,
+      backgroundColor,
+    },
+  });
 }

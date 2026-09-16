@@ -1,4 +1,10 @@
+export { BackIcon } from './BackIcon';
+export { DeleteIcon } from './DeleteIcon';
+export { EditIcon } from './EditIcon';
+export { GenerateIcon } from './GenerateIcon';
 export { HomeIcon } from './HomeIcon';
+export { LibraryIcon } from './LibraryIcon';
 export { LogoutIcon } from './LogoutIcon';
 export { MenuIcon } from './MenuIcon';
+export { SaveIcon } from './SaveIcon';
 export { SettingIcon } from './SettingIcon';

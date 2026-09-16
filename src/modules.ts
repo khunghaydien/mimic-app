@@ -1,4 +1,3 @@
-export type ModuleId = 'home' | 'setting';
+export type ModuleId = 'home' | 'library' | 'setting';
 
-/** Footer tab order — labels come from i18n `tabs.*`. */
-export const MODULES: ModuleId[] = ['home', 'setting'];
+export const MODULES: ModuleId[] = ['home', 'library', 'setting'];

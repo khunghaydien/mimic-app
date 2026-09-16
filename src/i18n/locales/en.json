@@ -4,10 +4,36 @@
   },
   "tabs": {
     "home": "Home",
+    "library": "Library",
     "setting": "Setting"
   },
+  "library": {
+    "title": "Library",
+    "detailTitle": "Library detail",
+    "searchPlaceholder": "Search by title",
+    "create": "Create library",
+    "empty": "No libraries found",
+    "fieldTitle": "Title",
+    "fieldId": "ID",
+    "fieldCreator": "Creator",
+    "fieldQuestions": "Questions",
+    "fieldCreated": "Created",
+    "fieldUpdated": "Updated",
+    "titlePlaceholder": "Library title",
+    "questionLabel": "Question {{index}}",
+    "questionPlaceholder": "Question {{index}}",
+    "hintPlaceholder": "Hint {{index}}",
+    "generate": "Generate",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "deleteConfirmTitle": "Delete library",
+    "deleteConfirm": "Delete \"{{title}}\"? This cannot be undone.",
+    "cancel": "Cancel",
+    "errorTitle": "Title cannot be empty",
+    "errorQuestion": "Question cannot be empty"
+  },
   "home": {
-    "title": "Home",
     "hello": "Hello, {{name}}"
   },
   "setting": {
@@ -26,6 +52,7 @@
     "vietnamese": "Vietnamese"
   },
   "header": {
+    "back": "Back",
     "menu": "Menu",
     "setting": "Setting",
     "logout": "Log out"
@@ -36,7 +63,15 @@
     "password": "Password",
     "passwordPlaceholder": "••••••••",
     "login": "Sign in",
+    "register": "Sign up",
+    "registerTitle": "Create account",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "goRegister": "Don't have an account? Sign up",
+    "goLogin": "Already have an account? Sign in",
     "errorRequired": "Email and password are required",
-    "errorEmail": "Enter a valid email"
+    "errorEmail": "Enter a valid email",
+    "errorName": "Name must be 1–100 characters",
+    "errorPassword": "Password must be 8–72 characters"
   }
 }
