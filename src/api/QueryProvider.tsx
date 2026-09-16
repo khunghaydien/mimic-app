@@ -1,13 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Platform } from 'react-native';
 import type { ReactNode } from 'react';
 
 import { toast } from '@/ui/toast';
 
 import { AUTH_PATHS } from './auth/const';
 
-const BASE_URL =
-  Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+const BASE_URL = 'https://mimic-be-production.up.railway.app';
 
 type ApiResponse<T> =
   | { success: true; data: T; message: string }

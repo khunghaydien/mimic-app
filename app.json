@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "mimicapp",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.phunghuudat.mimicapp"
@@ -18,7 +19,8 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.phunghuudat.mimicapp"
+      "package": "com.phunghuudat.mimicapp",
+      "usesCleartextTraffic": true
     },
     "web": {
       "favicon": "./assets/favicon.png"

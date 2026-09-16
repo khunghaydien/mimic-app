@@ -2,10 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useTranslation } from 'react-i18next';
-import {
-  SafeAreaProvider,
-  initialWindowMetrics,
-} from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, QueryProvider, useAuth } from '@/api';
 import { loadSavedLanguage } from '@/i18n';
@@ -27,7 +24,7 @@ import {
 
 export default function App() {
   return (
-    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+    <SafeAreaProvider>
       <ThemeProvider>
         <QueryProvider>
           <AuthProvider>
