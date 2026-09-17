@@ -23,7 +23,11 @@
     "questionLabel": "Question {{index}}",
     "questionPlaceholder": "Question {{index}}",
     "hintPlaceholder": "Hint {{index}}",
-    "generate": "Generate",
+    "playAudio": "Play audio",
+    "pauseAudio": "Pause",
+    "audioTitle": "Question {{index}} audio",
+    "close": "Close",
+    "generate": "Generate questions",
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",
@@ -71,7 +75,7 @@
     "goLogin": "Already have an account? Sign in",
     "errorRequired": "Email and password are required",
     "errorEmail": "Enter a valid email",
-    "errorName": "Name must be 1–100 characters",
-    "errorPassword": "Password must be 8–72 characters"
+    "errorName": "Enter a name",
+    "errorPassword": "Enter a password"
   }
 }

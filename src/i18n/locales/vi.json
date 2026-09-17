@@ -23,7 +23,11 @@
     "questionLabel": "Câu hỏi {{index}}",
     "questionPlaceholder": "Câu hỏi {{index}}",
     "hintPlaceholder": "Gợi ý {{index}}",
-    "generate": "Sinh câu hỏi",
+    "playAudio": "Phát âm thanh",
+    "pauseAudio": "Tạm dừng",
+    "audioTitle": "Câu hỏi {{index}} audio",
+    "close": "Đóng",
+    "generate": "Tạo câu hỏi",
     "save": "Lưu",
     "delete": "Xóa",
     "edit": "Sửa",
@@ -71,7 +75,7 @@
     "goLogin": "Đã có tài khoản? Đăng nhập",
     "errorRequired": "Vui lòng nhập email và mật khẩu",
     "errorEmail": "Email không hợp lệ",
-    "errorName": "Tên phải từ 1–100 ký tự",
-    "errorPassword": "Mật khẩu phải từ 8–72 ký tự"
+    "errorName": "Vui lòng nhập tên",
+    "errorPassword": "Vui lòng nhập mật khẩu"
   }
 }

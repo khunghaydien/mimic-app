@@ -12,167 +12,121 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { fromGenerateBody, useLibraryForm } from '@/api';
+import { useLibraryForm } from '@/api';
 import { AppButton, IconButton, toast, useTheme } from '@/ui';
-import { DeleteIcon, GenerateIcon, SaveIcon } from '@/ui/icon';
+import { DeleteIcon, GenerateIcon, SaveIcon, SpeakerIcon } from '@/ui/icon';
 
-type Props = {
-  libraryId: string | null;
-  onClose: () => void;
-};
+import { QuestionAudioModal } from './QuestionAudioModal';
 
 type QuestionDraft = {
   key: string;
   id: string | null;
   content: string;
   hint: string;
+  audioUrl: string | null;
 };
 
-type QuestionSnapshot = {
-  id: string | null;
+let questionKeySequence = 0;
+
+function toQuestionDraft(question: {
+  id?: string;
   content: string;
   hint: string;
-};
-
-let questionSeq = 0;
-
-function createQuestion(
-  content = '',
-  id: string | null = null,
-  hint = '',
-): QuestionDraft {
-  questionSeq += 1;
-  return { key: id ?? `q-${questionSeq}`, id, content, hint };
+  audioUrl?: string | null;
+}): QuestionDraft {
+  questionKeySequence += 1;
+  return {
+    key: question.id ?? `question-${questionKeySequence}`,
+    id: question.id ?? null,
+    content: question.content,
+    hint: question.hint,
+    audioUrl: question.audioUrl ?? null,
+  };
 }
 
-function toDrafts(
-  items: { id?: string | null; content: string; hint?: string }[],
-): QuestionDraft[] {
-  return items.map((item) =>
-    createQuestion(item.content, item.id ?? null, item.hint ?? ''),
-  );
-}
-
-function snapshotOf(items: QuestionDraft[]): QuestionSnapshot[] {
-  return items.map((item) => ({
-    id: item.id,
-    content: item.content.trim(),
-    hint: item.hint.trim(),
-  }));
-}
-
-function isQuestionDirty(item: QuestionDraft, saved: QuestionSnapshot[]) {
-  if (!item.id) return true;
-  const orig = saved.find((row) => row.id === item.id);
-  if (!orig) return true;
-  return (
-    orig.content !== item.content.trim() || orig.hint !== item.hint.trim()
-  );
-}
-
-function areQuestionsChanged(
-  items: QuestionDraft[],
-  saved: QuestionSnapshot[],
-) {
-  if (items.length !== saved.length) return true;
-  return items.some((item, index) => {
-    const orig = saved[index];
-    if (!orig) return true;
-    return (
-      orig.id !== item.id ||
-      orig.content !== item.content.trim() ||
-      orig.hint !== item.hint.trim()
-    );
-  });
-}
-
-export function LibraryForm({ libraryId, onClose }: Props) {
+export function LibraryForm({
+  libraryId,
+  onClose,
+}: {
+  libraryId: string | null;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
   const { colors, mode } = useTheme();
   const styles = useMemo(() => createStyles(colors, mode), [colors, mode]);
-  const {
-    detail,
-    create,
-    generate,
-    update,
-    addQuestion,
-    updateQuestion,
-    removeQuestion,
-  } = useLibraryForm(libraryId);
+  const { detail, create, generate, update, addQuestion, updateQuestion, removeQuestion } =
+    useLibraryForm(libraryId);
 
   const [title, setTitle] = useState('');
   const [savedTitle, setSavedTitle] = useState('');
   const [questions, setQuestions] = useState<QuestionDraft[]>([]);
-  const [savedQuestions, setSavedQuestions] = useState<QuestionSnapshot[]>([]);
-  const hydratedId = useRef<string | null>(null);
-  const order = useQuestionOrder((from, to) => {
-    setQuestions((current) => moveItem(current, from, to));
+  const [savedQuestions, setSavedQuestions] = useState<QuestionDraft[]>([]);
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const loadedLibraryId = useRef<string | null>(null);
+  const questionDrag = useQuestionDrag((fromIndex, toIndex) => {
+    setQuestions((current) => {
+      const next = [...current];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
   });
 
   useEffect(() => {
     if (!libraryId) {
-      hydratedId.current = null;
+      loadedLibraryId.current = null;
       setTitle('');
       setSavedTitle('');
       setQuestions([]);
       setSavedQuestions([]);
+      setPlayingIndex(null);
       return;
     }
-    if (!detail.data || detail.data.id !== libraryId) return;
-    if (hydratedId.current === libraryId) return;
-    hydratedId.current = libraryId;
-    const rows = toDrafts(detail.data.questions);
+    if (!detail.data || loadedLibraryId.current === libraryId) return;
+    loadedLibraryId.current = libraryId;
+    const drafts = detail.data.questions.map(toQuestionDraft);
     setTitle(detail.data.title);
-    setSavedTitle(detail.data.title.trim());
-    setQuestions(rows);
-    setSavedQuestions(snapshotOf(rows));
+    setSavedTitle(detail.data.title);
+    setQuestions(drafts);
+    setSavedQuestions(drafts);
   }, [libraryId, detail.data]);
 
-  const pending = create.isPending || generate.isPending;
-  const saving =
-    update.isPending ||
-    addQuestion.isPending ||
-    updateQuestion.isPending ||
-    removeQuestion.isPending;
-  const questionsChanged = areQuestionsChanged(questions, savedQuestions);
-  const libraryDirty = title.trim() !== savedTitle || questionsChanged;
+  const hasUnsavedLibraryChanges =
+    title.trim() !== savedTitle ||
+    questions.length !== savedQuestions.length ||
+    questions.some(
+      (question, index) =>
+        question.id !== savedQuestions[index].id ||
+        question.content.trim() !== savedQuestions[index].content.trim() ||
+        question.hint.trim() !== savedQuestions[index].hint.trim(),
+    );
+
+  const toQuestionPayload = (includeId = false) =>
+    questions
+      .map((question) => ({
+        ...(includeId && question.id ? { id: question.id } : {}),
+        content: question.content.trim(),
+        hint: question.hint.trim(),
+      }))
+      .filter((question) => question.content);
 
   const requireTitle = () => {
-    const trimmed = title.trim();
-    if (!trimmed) {
-      toast.show('error', t('library.errorTitle'));
-      return null;
-    }
-    return trimmed;
-  };
-
-  const questionPayload = (withId = false) =>
-    questions.flatMap((item) => {
-      const content = item.content.trim();
-      const hint = item.hint.trim();
-      if (!content) return [];
-      if (withId && item.id) return [{ id: item.id, content, hint }];
-      return [{ content, hint }];
-    });
-
-  const remember = (rows: QuestionDraft[]) => {
-    setQuestions(rows);
-    setSavedQuestions(snapshotOf(rows));
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) toast.show('error', t('library.errorTitle'));
+    return trimmedTitle;
   };
 
   const onSaveLibrary = () => {
     const trimmedTitle = requireTitle();
     if (!trimmedTitle || !libraryId) return;
     update.mutate(
-      {
-        id: libraryId,
-        title: trimmedTitle,
-        questions: questionPayload(true),
-      },
+      { id: libraryId, title: trimmedTitle, questions: toQuestionPayload(true) },
       {
         onSuccess: (data) => {
-          setSavedTitle((data.title ?? trimmedTitle).trim());
-          remember(data.questions ? toDrafts(data.questions) : questions);
+          const drafts = data.questions.map(toQuestionDraft);
+          setSavedTitle(data.title);
+          setQuestions(drafts);
+          setSavedQuestions(drafts);
         },
       },
     );
@@ -186,95 +140,75 @@ export function LibraryForm({ libraryId, onClose }: Props) {
       return;
     }
     if (!libraryId) return;
+
+    const rememberSavedQuestion = (saved: {
+      id: string;
+      content: string;
+      hint: string;
+      audioUrl: string | null;
+    }) => {
+      setQuestions((current) =>
+        current.map((row) => (row.key === item.key ? { ...row, ...saved } : row)),
+      );
+      setSavedQuestions((current) => {
+        const index = current.findIndex((row) => row.id === saved.id);
+        const next = { key: item.key, ...saved };
+        if (index < 0) return [...current, next];
+        return current.map((row, rowIndex) => (rowIndex === index ? next : row));
+      });
+    };
+
     if (item.id) {
       updateQuestion.mutate(
         { id: libraryId, questionId: item.id, content, hint },
-        {
-          onSuccess: (updated) => {
-            setSavedQuestions((current) =>
-              current.map((row) =>
-                row.id === updated.id
-                  ? {
-                      id: updated.id,
-                      content: updated.content,
-                      hint: updated.hint ?? hint,
-                    }
-                  : row,
-              ),
-            );
-          },
-        },
+        { onSuccess: rememberSavedQuestion },
       );
-      return;
+    } else {
+      addQuestion.mutate(
+        { id: libraryId, content, hint },
+        { onSuccess: rememberSavedQuestion },
+      );
     }
-    addQuestion.mutate(
-      { id: libraryId, content, hint },
-      {
-        onSuccess: (created) => {
-          setQuestions((current) =>
-            current.map((row) =>
-              row.key === item.key
-                ? {
-                    ...row,
-                    id: created.id,
-                    content: created.content,
-                    hint: created.hint ?? hint,
-                  }
-                : row,
-            ),
-          );
-          setSavedQuestions((current) => [
-            ...current,
-            {
-              id: created.id,
-              content: created.content,
-              hint: created.hint ?? hint,
-            },
-          ]);
-        },
-      },
-    );
   };
 
   const onDeleteQuestion = (item: QuestionDraft) => {
-    const drop = () => {
+    const removeFromForm = () => {
       setQuestions((current) => current.filter((row) => row.key !== item.key));
-      setSavedQuestions((current) =>
-        item.id ? current.filter((row) => row.id !== item.id) : current,
-      );
+      setSavedQuestions((current) => current.filter((row) => row.key !== item.key));
     };
-    if (!libraryId || !item.id) {
-      drop();
-      return;
+    if (libraryId && item.id) {
+      removeQuestion.mutate(
+        { id: libraryId, questionId: item.id },
+        { onSuccess: removeFromForm },
+      );
+    } else {
+      removeFromForm();
     }
-    removeQuestion.mutate(
-      { id: libraryId, questionId: item.id },
-      { onSuccess: drop },
-    );
   };
 
-  const onCreate = () => {
+  const onCreateLibrary = () => {
     const trimmedTitle = requireTitle();
     if (!trimmedTitle) return;
-    const nextQuestions = questionPayload();
     create.mutate(
-      {
-        title: trimmedTitle,
-        questions: nextQuestions.length > 0 ? nextQuestions : undefined,
-      },
+      { title: trimmedTitle, questions: toQuestionPayload() },
       { onSuccess: onClose },
     );
   };
 
-  const onGenerate = () => {
+  const onGenerateQuestions = () => {
     const trimmedTitle = requireTitle();
     if (!trimmedTitle) return;
     generate.mutate(trimmedTitle, {
-      onSuccess: (data) => setQuestions(toDrafts(fromGenerateBody(data))),
+      onSuccess: (generated) =>
+        setQuestions(
+          Object.keys(generated)
+            .sort((left, right) => Number(left) - Number(right))
+            .map((key) => toQuestionDraft(generated[key]!)),
+        ),
     });
   };
 
-  const patchQuestion = (
+  const updateQuestionField = (
     index: number,
     field: 'content' | 'hint',
     value: string,
@@ -286,40 +220,41 @@ export function LibraryForm({ libraryId, onClose }: Props) {
     );
   };
 
+  const playingQuestion = playingIndex == null ? null : questions[playingIndex];
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.wrap}
+      style={styles.container}
     >
       {libraryId && detail.isLoading ? (
         <ActivityIndicator color={colors.primary} style={styles.loading} />
       ) : (
         <View style={styles.body}>
           <View style={styles.header}>
-            <View style={styles.sectionHead}>
+            <View style={styles.sectionHeader}>
               <Text style={styles.sectionLabel}>{t('library.fieldTitle')}</Text>
-              {libraryId && libraryDirty ? (
-                <IconButton
-                  label={t('library.save')}
-                  onPress={onSaveLibrary}
-                  disabled={saving}
-                  hitSlop={6}
-                  style={styles.iconBtn}
-                >
-                  <SaveIcon color={colors.primary} />
-                </IconButton>
-              ) : null}
-              {!libraryId ? (
+              {libraryId ? (
+                hasUnsavedLibraryChanges ? (
+                  <IconButton
+                    label={t('library.save')}
+                    onPress={onSaveLibrary}
+                    hitSlop={6}
+                    style={styles.iconButton}
+                  >
+                    <SaveIcon color={colors.primary} />
+                  </IconButton>
+                ) : null
+              ) : (
                 <IconButton
                   label={t('library.generate')}
-                  onPress={onGenerate}
-                  disabled={pending}
+                  onPress={onGenerateQuestions}
                   hitSlop={6}
-                  style={styles.iconBtn}
+                  style={styles.iconButton}
                 >
                   <GenerateIcon color={colors.primary} />
                 </IconButton>
-              ) : null}
+              )}
             </View>
             <TextInput
               value={title}
@@ -334,134 +269,138 @@ export function LibraryForm({ libraryId, onClose }: Props) {
             style={styles.questionList}
             contentContainerStyle={styles.questionContent}
             keyboardShouldPersistTaps="handled"
-            scrollEnabled={!order.dragging}
+            scrollEnabled={!questionDrag.dragging}
           >
-            {questions.map((item, index) => (
-              <View
-                key={item.key}
-                onLayout={(event) => {
-                  order.setRowLayout(index, event.nativeEvent.layout);
-                }}
-                style={[
-                  styles.questionBlock,
-                  order.dropIndex === index && styles.questionDrop,
-                ]}
-                {...order.webRowProps(index)}
-              >
-                <View style={styles.questionToolbar}>
-                  <QuestionIndex
-                    label={t('library.questionLabel', { index: index + 1 })}
-                    index={index}
-                    color={colors.text}
-                    onDragStart={() => order.onDragStart(index)}
-                    onDragMove={order.onDragMove}
-                    onDragEnd={order.onDragEnd}
-                  />
-                  {libraryId || questions.length > 1 ? (
-                    <View style={styles.questionActions}>
-                      {libraryId && isQuestionDirty(item, savedQuestions) ? (
+            {questions.map((item, index) => {
+              const savedQuestion = savedQuestions.find(
+                (row) => row.id && row.id === item.id,
+              );
+              const hasUnsavedQuestionChanges =
+                !savedQuestion ||
+                savedQuestion.content.trim() !== item.content.trim() ||
+                savedQuestion.hint.trim() !== item.hint.trim();
+
+              return (
+                <View
+                  key={item.key}
+                  onLayout={(event) =>
+                    questionDrag.setRowLayout(index, event.nativeEvent.layout)
+                  }
+                  style={[
+                    styles.questionBlock,
+                    questionDrag.dropIndex === index && styles.questionDrop,
+                  ]}
+                  {...questionDrag.webDragRowProps(index)}
+                >
+                  <View style={styles.questionToolbar}>
+                    <QuestionDragHandle
+                      label={t('library.questionLabel', { index: index + 1 })}
+                      color={colors.text}
+                      onDragStart={() => questionDrag.onDragStart(index)}
+                      onDragMove={questionDrag.onDragMove}
+                      onDragEnd={questionDrag.onDragEnd}
+                    />
+                    {libraryId || questions.length > 1 ? (
+                      <View style={styles.questionActions}>
+                        {libraryId && hasUnsavedQuestionChanges ? (
+                          <IconButton
+                            label={t('library.save')}
+                            onPress={() => onSaveQuestion(item)}
+                            hitSlop={6}
+                            style={styles.iconButton}
+                          >
+                            <SaveIcon color={colors.primary} />
+                          </IconButton>
+                        ) : null}
+                        {item.audioUrl ? (
+                          <IconButton
+                            label={t('library.playAudio')}
+                            onPress={() => setPlayingIndex(index)}
+                            hitSlop={6}
+                            style={styles.iconButton}
+                          >
+                            <SpeakerIcon color={colors.primary} />
+                          </IconButton>
+                        ) : null}
                         <IconButton
-                          label={t('library.save')}
-                          onPress={() => onSaveQuestion(item)}
-                          disabled={saving}
+                          label={t('library.delete')}
+                          onPress={() => onDeleteQuestion(item)}
                           hitSlop={6}
-                          style={styles.iconBtn}
+                          style={styles.iconButton}
                         >
-                          <SaveIcon color={colors.primary} />
+                          <DeleteIcon color={colors.danger} />
                         </IconButton>
-                      ) : null}
-                      <IconButton
-                        label={t('library.delete')}
-                        onPress={() => onDeleteQuestion(item)}
-                        disabled={saving}
-                        hitSlop={6}
-                        style={styles.iconBtn}
-                      >
-                        <DeleteIcon color={colors.danger} />
-                      </IconButton>
-                    </View>
-                  ) : null}
+                      </View>
+                    ) : null}
+                  </View>
+                  <View style={styles.questionFields}>
+                    <QuestionField
+                      value={item.content}
+                      onChangeText={(value) =>
+                        updateQuestionField(index, 'content', value)
+                      }
+                      placeholder={t('library.questionPlaceholder', {
+                        index: index + 1,
+                      })}
+                      colors={colors}
+                      style={styles.input}
+                    />
+                    <QuestionField
+                      value={item.hint}
+                      onChangeText={(value) =>
+                        updateQuestionField(index, 'hint', value)
+                      }
+                      placeholder={t('library.hintPlaceholder', {
+                        index: index + 1,
+                      })}
+                      colors={colors}
+                      style={styles.input}
+                    />
+                  </View>
                 </View>
-                <View style={styles.questionFields}>
-                  <QuestionField
-                    value={item.content}
-                    onChangeText={(value) =>
-                      patchQuestion(index, 'content', value)
-                    }
-                    placeholder={t('library.questionPlaceholder', {
-                      index: index + 1,
-                    })}
-                    placeholderColor={colors.textMuted}
-                    colors={colors}
-                    style={styles.input}
-                  />
-                  <QuestionField
-                    value={item.hint}
-                    onChangeText={(value) =>
-                      patchQuestion(index, 'hint', value)
-                    }
-                    placeholder={t('library.hintPlaceholder', {
-                      index: index + 1,
-                    })}
-                    placeholderColor={colors.textMuted}
-                    colors={colors}
-                    style={styles.input}
-                  />
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </ScrollView>
         </View>
       )}
 
       {libraryId ? null : (
         <View style={styles.actionBar}>
-          <AppButton
-            label={t('library.save')}
-            onPress={onCreate}
-            disabled={pending}
-          />
+          <AppButton label={t('library.save')} onPress={onCreateLibrary} />
         </View>
       )}
+
+      {playingIndex != null && playingQuestion?.audioUrl ? (
+        <QuestionAudioModal
+          questionIndex={playingIndex + 1}
+          audioUrl={playingQuestion.audioUrl}
+          content={playingQuestion.content}
+          hint={playingQuestion.hint}
+          onClose={() => setPlayingIndex(null)}
+        />
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
 
-function moveItem<T>(items: T[], from: number, to: number) {
-  if (
-    from === to ||
-    from < 0 ||
-    to < 0 ||
-    from >= items.length ||
-    to >= items.length
-  ) {
-    return items;
-  }
-  const next = [...items];
-  const [row] = next.splice(from, 1);
-  next.splice(to, 0, row);
-  return next;
-}
-
-function useQuestionOrder(onMove: (from: number, to: number) => void) {
-  const dragFrom = useRef<number | null>(null);
+function useQuestionDrag(onMove: (fromIndex: number, toIndex: number) => void) {
+  const dragFromIndex = useRef<number | null>(null);
   const rowLayouts = useRef<{ y: number; height: number }[]>([]);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
 
-  const targetIndex = (from: number, dy: number) => {
-    const boxes = rowLayouts.current;
-    const origin = boxes[from];
-    if (!origin) return from;
-    const point = origin.y + origin.height / 2 + dy;
-    if (boxes[0] && point < boxes[0].y) return 0;
-    const last = boxes[boxes.length - 1];
-    if (last && point >= last.y + last.height) return boxes.length - 1;
-    for (let i = 0; i < boxes.length; i += 1) {
-      const box = boxes[i];
-      if (box && point >= box.y && point < box.y + box.height) return i;
-    }
-    return from;
+  const dropIndexForOffset = (fromIndex: number, dragOffsetY: number) => {
+    const layouts = rowLayouts.current;
+    const origin = layouts[fromIndex];
+    if (!origin || layouts.length === 0) return fromIndex;
+    const dragY = origin.y + origin.height / 2 + dragOffsetY;
+    if (dragY < layouts[0].y) return 0;
+    const last = layouts[layouts.length - 1];
+    if (dragY >= last.y + last.height) return layouts.length - 1;
+    const index = layouts.findIndex(
+      (layout) => dragY >= layout.y && dragY < layout.y + layout.height,
+    );
+    return index < 0 ? fromIndex : index;
   };
 
   return {
@@ -470,7 +409,7 @@ function useQuestionOrder(onMove: (from: number, to: number) => void) {
     setRowLayout: (index: number, layout: { y: number; height: number }) => {
       rowLayouts.current[index] = layout;
     },
-    webRowProps: (index: number) =>
+    webDragRowProps: (index: number) =>
       Platform.OS === 'web'
         ? {
             onDragOver: (event: { preventDefault: () => void }) => {
@@ -479,68 +418,66 @@ function useQuestionOrder(onMove: (from: number, to: number) => void) {
             },
             onDrop: (event: { preventDefault: () => void }) => {
               event.preventDefault();
-              const from = dragFrom.current;
-              dragFrom.current = null;
+              const fromIndex = dragFromIndex.current;
+              dragFromIndex.current = null;
               setDropIndex(null);
-              if (from == null) return;
-              onMove(from, index);
+              if (fromIndex != null) onMove(fromIndex, index);
             },
           }
         : {},
     onDragStart: (index: number) => {
-      dragFrom.current = index;
+      dragFromIndex.current = index;
       setDragging(true);
     },
-    onDragMove: (dy: number) => {
-      const from = dragFrom.current;
-      if (from == null) return;
-      const to = targetIndex(from, dy);
-      setDropIndex((current) => (current === to ? current : to));
+    onDragMove: (dragOffsetY: number) => {
+      const fromIndex = dragFromIndex.current;
+      if (fromIndex == null) return;
+      const nextDropIndex = dropIndexForOffset(fromIndex, dragOffsetY);
+      setDropIndex((current) => (current === nextDropIndex ? current : nextDropIndex));
     },
-    onDragEnd: (dy?: number) => {
-      const from = dragFrom.current;
-      dragFrom.current = null;
+    onDragEnd: (dragOffsetY?: number) => {
+      const fromIndex = dragFromIndex.current;
+      dragFromIndex.current = null;
       setDragging(false);
       setDropIndex(null);
-      if (from == null || dy == null) return;
-      onMove(from, targetIndex(from, dy));
+      if (fromIndex != null && dragOffsetY != null) {
+        onMove(fromIndex, dropIndexForOffset(fromIndex, dragOffsetY));
+      }
     },
   };
 }
 
-function QuestionIndex({
+function QuestionDragHandle({
   label,
   color,
-  index,
   onDragStart,
   onDragMove,
   onDragEnd,
 }: {
   label: string;
   color: string;
-  index: number;
   onDragStart: () => void;
-  onDragMove?: (dy: number) => void;
-  onDragEnd: (dy?: number) => void;
+  onDragMove: (dragOffsetY: number) => void;
+  onDragEnd: (dragOffsetY?: number) => void;
 }) {
-  const dragStart = useRef(onDragStart);
-  const dragMove = useRef(onDragMove);
-  const dragEnd = useRef(onDragEnd);
-  dragStart.current = onDragStart;
-  dragMove.current = onDragMove;
-  dragEnd.current = onDragEnd;
+  const onDragStartRef = useRef(onDragStart);
+  const onDragMoveRef = useRef(onDragMove);
+  const onDragEndRef = useRef(onDragEnd);
+  onDragStartRef.current = onDragStart;
+  onDragMoveRef.current = onDragMove;
+  onDragEndRef.current = onDragEnd;
 
-  const pan = useMemo(
+  const panResponder = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
         onPanResponderTerminationRequest: () => false,
         onShouldBlockNativeResponder: () => true,
-        onPanResponderGrant: () => dragStart.current(),
-        onPanResponderMove: (_, gesture) => dragMove.current?.(gesture.dy),
-        onPanResponderRelease: (_, gesture) => dragEnd.current(gesture.dy),
-        onPanResponderTerminate: () => dragEnd.current(),
+        onPanResponderGrant: () => onDragStartRef.current(),
+        onPanResponderMove: (_, gesture) => onDragMoveRef.current(gesture.dy),
+        onPanResponderRelease: (_, gesture) => onDragEndRef.current(gesture.dy),
+        onPanResponderTerminate: () => onDragEndRef.current(),
       }),
     [],
   );
@@ -550,21 +487,12 @@ function QuestionIndex({
       'div',
       {
         draggable: true,
-        title: 'Drag to reorder',
-        onDragStart: (event: {
-          dataTransfer: {
-            effectAllowed: string;
-            setData: (type: string, value: string) => void;
-          };
-        }) => {
+        onDragStart: (event: { dataTransfer: { effectAllowed: string } }) => {
           event.dataTransfer.effectAllowed = 'move';
-          event.dataTransfer.setData('text/plain', String(index));
           onDragStart();
         },
         onDragEnd: () => onDragEnd(),
-        onDragOver: (event: { preventDefault: () => void }) => {
-          event.preventDefault();
-        },
+        onDragOver: (event: { preventDefault: () => void }) => event.preventDefault(),
         style: {
           fontSize: 16,
           fontWeight: 600,
@@ -579,7 +507,7 @@ function QuestionIndex({
   }
 
   return (
-    <View {...pan.panHandlers}>
+    <View {...panResponder.panHandlers}>
       <Text style={{ fontSize: 16, fontWeight: '600', color }}>{label}</Text>
     </View>
   );
@@ -589,40 +517,36 @@ function QuestionField({
   value,
   onChangeText,
   placeholder,
-  placeholderColor,
   colors,
   style,
 }: {
   value: string;
   onChangeText: (value: string) => void;
   placeholder: string;
-  placeholderColor: string;
   colors: ReturnType<typeof useTheme>['colors'];
   style: object;
 }) {
-  const areaRef = useRef<HTMLTextAreaElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const grow = (el: HTMLTextAreaElement | null) => {
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${Math.max(46, el.scrollHeight)}px`;
+  const fitTextareaHeight = (textarea: HTMLTextAreaElement | null) => {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.max(46, textarea.scrollHeight)}px`;
   };
 
   useLayoutEffect(() => {
     if (Platform.OS !== 'web') return;
-    grow(areaRef.current);
-    const id = requestAnimationFrame(() => grow(areaRef.current));
-    return () => cancelAnimationFrame(id);
+    fitTextareaHeight(textareaRef.current);
   }, [value]);
 
   if (Platform.OS === 'web') {
     return createElement('textarea', {
-      ref: areaRef,
+      ref: textareaRef,
       value,
       placeholder,
       onChange: (event: { currentTarget: HTMLTextAreaElement }) => {
         onChangeText(event.currentTarget.value);
-        grow(event.currentTarget);
+        fitTextareaHeight(event.currentTarget);
       },
       style: {
         boxSizing: 'border-box',
@@ -642,7 +566,6 @@ function QuestionField({
         resize: 'none',
         overflow: 'hidden',
         outline: 'none',
-        fieldSizing: 'content',
       },
     });
   }
@@ -652,7 +575,7 @@ function QuestionField({
       value={value}
       onChangeText={onChangeText}
       placeholder={placeholder}
-      placeholderTextColor={placeholderColor}
+      placeholderTextColor={colors.textMuted}
       multiline
       scrollEnabled={false}
       textAlignVertical="top"
@@ -666,42 +589,20 @@ function createStyles(
   mode: ReturnType<typeof useTheme>['mode'],
 ) {
   return StyleSheet.create({
-    wrap: {
-      flex: 1,
-    },
-    loading: {
-      flex: 1,
-    },
-    body: {
-      flex: 1,
-      minHeight: 0,
-    },
-    header: {
-      paddingHorizontal: 16,
-    },
-    sectionHead: {
+    container: { flex: 1 },
+    loading: { flex: 1 },
+    body: { flex: 1, minHeight: 0 },
+    header: { paddingHorizontal: 16 },
+    sectionHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 8,
       paddingBottom: 8,
     },
-    sectionLabel: {
-      flex: 1,
-      fontSize: 18,
-      fontWeight: '700',
-      color: colors.text,
-    },
-    questionList: {
-      flex: 1,
-      minHeight: 0,
-    },
-    questionContent: {
-      paddingHorizontal: 16,
-      paddingTop: 16,
-      paddingBottom: 16,
-      gap: 16,
-    },
+    sectionLabel: { flex: 1, fontSize: 18, fontWeight: '700', color: colors.text },
+    questionList: { flex: 1, minHeight: 0 },
+    questionContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16, gap: 16 },
     input: {
       borderWidth: 1,
       borderColor: colors.border,
@@ -712,27 +613,17 @@ function createStyles(
       paddingVertical: 12,
       fontSize: 16,
     },
-    questionBlock: {
-      gap: 8,
-    },
-    questionDrop: {
-      opacity: 0.7,
-    },
+    questionBlock: { gap: 8 },
+    questionDrop: { opacity: 0.7 },
     questionToolbar: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       minHeight: 32,
     },
-    questionFields: {
-      gap: 8,
-    },
-    questionActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    iconBtn: {
+    questionFields: { gap: 8 },
+    questionActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    iconButton: {
       width: 32,
       height: 32,
       borderRadius: 8,
@@ -741,10 +632,6 @@ function createStyles(
       backgroundColor:
         mode === 'dark' ? 'rgba(36, 48, 64, 0.5)' : 'rgba(220, 223, 228, 0.68)',
     },
-    actionBar: {
-      paddingHorizontal: 16,
-      paddingTop: 8,
-      paddingBottom: 8,
-    },
+    actionBar: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
   });
 }

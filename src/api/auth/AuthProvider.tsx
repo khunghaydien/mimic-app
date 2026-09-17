@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useMutation } from '@tanstack/react-query';
 import {
   Component,
   createContext,
@@ -7,23 +6,11 @@ import {
   type ReactNode,
 } from 'react';
 
-import { api, queryClient } from '../QueryProvider';
-import { AUTH_PATHS } from './const';
+import { api, queryClient, type AuthSession } from '../QueryProvider';
 
 const STORAGE_KEY = 'mimicapp.auth.session';
 
-type AuthUser = {
-  id: string;
-  name: string;
-  email: string;
-  avatarUrl: string | null;
-};
-
-type AuthSession = {
-  user: AuthUser;
-  accessToken: string;
-  refreshToken: string;
-};
+type AuthUser = AuthSession['user'];
 
 type AuthValue = {
   user: AuthUser | null;
@@ -96,20 +83,5 @@ export class AuthProvider extends Component<
 }
 
 export function useAuth() {
-  const auth = useContext(AuthContext);
-  const login = useMutation({
-    mutationFn: (body: { email: string; password: string }) =>
-      api.request<AuthSession>(AUTH_PATHS.LOGIN, 'POST', body),
-    onSuccess: auth.setSession,
-  });
-  const register = useMutation({
-    mutationFn: (body: {
-      name: string;
-      email: string;
-      password: string;
-      avatarUrl?: string;
-    }) => api.request<AuthSession>(AUTH_PATHS.REGISTER, 'POST', body),
-    onSuccess: auth.setSession,
-  });
-  return { ...auth, login, register };
+  return useContext(AuthContext);
 }

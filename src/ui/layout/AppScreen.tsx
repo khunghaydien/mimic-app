@@ -1,26 +1,24 @@
-import { useMemo, type ReactNode } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { type ReactNode } from 'react';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useTheme } from '../theme';
 
-type ScreenProps = {
+export function AppScreen({
+  children,
+  style,
+}: {
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
-};
-
-export function AppScreen({ children, style }: ScreenProps) {
+}) {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-
-  return <View style={[styles.screen, style]}>{children}</View>;
-}
-
-function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
-  return StyleSheet.create({
-    screen: {
-      flex: 1,
-      backgroundColor: colors.background,
-      paddingBottom: 16,
-    },
-  });
+  return (
+    <View
+      style={[
+        { flex: 1, backgroundColor: colors.background, paddingBottom: 16 },
+        style,
+      ]}
+    >
+      {children}
+    </View>
+  );
 }

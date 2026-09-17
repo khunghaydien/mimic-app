@@ -37,6 +37,7 @@ const MENU_GAP = 6;
 export function AppHeader({ title, onOpenSetting, onHome, onBack }: Props) {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
+  const { name, email, avatarUrl } = user!;
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -44,7 +45,7 @@ export function AppHeader({ title, onOpenSetting, onHome, onBack }: Props) {
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   const menuBtnRef = useRef<RNView>(null);
 
-  const initials = (user?.name ?? '?')
+  const initials = name
     .split(/\s+/)
     .map((part) => part[0])
     .join('')
@@ -110,11 +111,8 @@ export function AppHeader({ title, onOpenSetting, onHome, onBack }: Props) {
           {menuStyle ? (
             <View style={[styles.menu, menuStyle]}>
               <View style={styles.userRow}>
-                {user?.avatarUrl ? (
-                  <Image
-                    source={{ uri: user.avatarUrl }}
-                    style={styles.avatar}
-                  />
+                {avatarUrl ? (
+                  <Image source={{ uri: avatarUrl }} style={styles.avatar} />
                 ) : (
                   <View style={styles.avatarFallback}>
                     <Text style={styles.avatarText}>{initials}</Text>
@@ -122,10 +120,10 @@ export function AppHeader({ title, onOpenSetting, onHome, onBack }: Props) {
                 )}
                 <View style={styles.userMeta}>
                   <Text style={styles.userName} numberOfLines={1}>
-                    {user?.name}
+                    {name}
                   </Text>
                   <Text style={styles.userEmail} numberOfLines={1}>
-                    {user?.email}
+                    {email}
                   </Text>
                 </View>
               </View>

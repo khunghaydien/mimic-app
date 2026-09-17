@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { setAppLanguage, type AppLanguage } from '@/i18n';
+import { setAppLanguage } from '@/i18n';
 import { AppScreen, PRIMARY_PRESETS, useTheme } from '@/ui';
 
 import { ColorButton } from './ColorButton';
@@ -12,7 +12,7 @@ export function SettingScreen() {
   const { t, i18n } = useTranslation();
   const { mode, setMode, primaryId, setPrimaryId, colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const language = (i18n.language?.startsWith('vi') ? 'vi' : 'en') as AppLanguage;
+  const language = i18n.language.startsWith('vi') ? 'vi' : 'en';
 
   return (
     <AppScreen>

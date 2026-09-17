@@ -3,26 +3,23 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useAuth } from '@/api';
+import { useLogin } from '@/api';
 import { AppButton, AppScreen, toast, useTheme } from '@/ui';
 
-type Props = {
-  onOpenRegister: () => void;
-};
+import { createAuthStyles } from '../authStyles';
 
-export function LoginScreen({ onOpenRegister }: Props) {
+export function LoginScreen({ onOpenRegister }: { onOpenRegister: () => void }) {
   const { t } = useTranslation();
-  const { login } = useAuth();
+  const login = useLogin();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createAuthStyles(colors), [colors]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -36,7 +33,6 @@ export function LoginScreen({ onOpenRegister }: Props) {
       toast.show('error', t('auth.errorEmail'));
       return;
     }
-
     login.mutate({ email: trimmedEmail, password });
   };
 
@@ -88,52 +84,4 @@ export function LoginScreen({ onOpenRegister }: Props) {
       </KeyboardAvoidingView>
     </AppScreen>
   );
-}
-
-function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
-  return StyleSheet.create({
-    screen: {
-      justifyContent: 'center',
-      paddingHorizontal: 16,
-    },
-    form: {
-      gap: 8,
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: '700',
-      color: colors.primary,
-      marginBottom: 16,
-    },
-    label: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: colors.textMuted,
-      marginTop: 8,
-    },
-    input: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.background,
-      color: colors.text,
-      borderRadius: 10,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      fontSize: 16,
-    },
-    submit: {
-      marginTop: 20,
-      alignSelf: 'stretch',
-      minWidth: undefined,
-    },
-    link: {
-      alignItems: 'center',
-      paddingVertical: 12,
-    },
-    linkText: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.primary,
-    },
-  });
 }

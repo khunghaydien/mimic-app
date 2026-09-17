@@ -1,79 +1,113 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Platform } from 'react-native';
 
-import { toast } from '@/ui/toast';
+import { LoadingOverlay, toast } from '@/ui';
 
-import { AUTH_PATHS } from './auth/const';
+import { AUTH_PATHS } from './auth/service';
 
-const BASE_URL = 'https://mimic-be-production.up.railway.app';
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+function apiBaseUrl() {
+  const url = process.env.EXPO_PUBLIC_BASE_URL ?? '';
+  if (Platform.OS === 'android') {
+    return url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
+  }
+  return url;
+}
+
+const BASE_URL = apiBaseUrl();
 
 type ApiResponse<T> =
   | { success: true; data: T; message: string }
   | { success: false; data: null; message: string[]; statusCode?: number };
 
-type Session = {
+export type AuthSession = {
   user: { id: string; name: string; email: string; avatarUrl: string | null };
   accessToken: string;
   refreshToken: string;
 };
 
+type MutatingListener = (count: number) => void;
+
 class Api {
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
-  onAuth: ((session: Session | null) => void) | null = null;
+  private pendingMutationCount = 0;
+  private listeners = new Set<MutatingListener>();
+  onAuth: ((session: AuthSession | null) => void) | null = null;
 
-  setAuth(session: Session | null) {
+  setAuth(session: AuthSession | null) {
     this.accessToken = session?.accessToken ?? null;
     this.refreshToken = session?.refreshToken ?? null;
   }
 
-  async request<T>(
-    path: string,
-    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
-    body?: unknown,
-  ): Promise<T> {
-    let payload = await this.call<T>(path, method, body);
-
-    if (
-      !payload.success &&
-      payload.statusCode === 401 &&
-      this.refreshToken &&
-      path !== AUTH_PATHS.REFRESH
-    ) {
-      const next = await this.call<Session>(AUTH_PATHS.REFRESH, 'POST', {
-        refreshToken: this.refreshToken,
-      });
-      if (next.success) {
-        this.setAuth(next.data);
-        this.onAuth?.(next.data);
-        payload = await this.call<T>(path, method, body);
-      } else {
-        this.setAuth(null);
-        this.onAuth?.(null);
-        throw new Error(next.message.join('\n'));
-      }
-    }
-
-    if (!payload.success) {
-      if (payload.statusCode === 401 && this.accessToken) {
-        this.setAuth(null);
-        this.onAuth?.(null);
-      } else {
-        toast.show('error', payload.message.join('\n'));
-      }
-      throw new Error(payload.message.join('\n'));
-    }
-
-    if (method !== 'GET') {
-      toast.show('success', payload.message);
-    }
-
-    return payload.data;
+  onMutating(listener: MutatingListener) {
+    this.listeners.add(listener);
+    listener(this.pendingMutationCount);
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
 
-  private async call<T>(
+  private changePendingMutationCount(delta: number) {
+    this.pendingMutationCount = Math.max(0, this.pendingMutationCount + delta);
+    this.listeners.forEach((listener) => listener(this.pendingMutationCount));
+  }
+
+  async request<T>(
     path: string,
-    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+    method: Method = 'GET',
+    body?: unknown,
+  ): Promise<T> {
+    const showLoadingOverlay = method !== 'GET' && path !== AUTH_PATHS.REFRESH;
+    if (showLoadingOverlay) this.changePendingMutationCount(1);
+    try {
+      let payload = await this.send<T>(path, method, body);
+
+      if (
+        !payload.success &&
+        payload.statusCode === 401 &&
+        this.refreshToken &&
+        path !== AUTH_PATHS.REFRESH
+      ) {
+        const refreshPayload = await this.send<AuthSession>(AUTH_PATHS.REFRESH, 'POST', {
+          refreshToken: this.refreshToken,
+        });
+        if (refreshPayload.success) {
+          this.setAuth(refreshPayload.data);
+          this.onAuth?.(refreshPayload.data);
+          payload = await this.send<T>(path, method, body);
+        } else {
+          this.setAuth(null);
+          this.onAuth?.(null);
+          throw new Error(refreshPayload.message.join('\n'));
+        }
+      }
+
+      if (!payload.success) {
+        if (payload.statusCode === 401 && this.accessToken) {
+          this.setAuth(null);
+          this.onAuth?.(null);
+        } else {
+          toast.show('error', payload.message.join('\n'));
+        }
+        throw new Error(payload.message.join('\n'));
+      }
+
+      if (method !== 'GET') {
+        toast.show('success', payload.message);
+      }
+
+      return payload.data;
+    } finally {
+      if (showLoadingOverlay) this.changePendingMutationCount(-1);
+    }
+  }
+
+  private async send<T>(
+    path: string,
+    method: Method,
     body?: unknown,
   ): Promise<ApiResponse<T>> {
     const headers: Record<string, string> = { Accept: 'application/json' };
@@ -101,10 +135,31 @@ class Api {
 }
 
 export const api = new Api();
-export const queryClient = new QueryClient();
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+      retry: 1,
+    },
+  },
+});
+
+function MutationLoadingOverlay() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => api.onMutating((count) => setVisible(count > 0)), []);
+
+  return <LoadingOverlay visible={visible} />;
+}
 
 export function QueryProvider({ children }: { children: ReactNode }) {
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      {children}
+      <MutationLoadingOverlay />
+    </QueryClientProvider>
   );
 }

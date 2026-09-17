@@ -4,55 +4,43 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useAuth } from '@/api';
+import { useRegister } from '@/api';
 import { AppButton, AppScreen, toast, useTheme } from '@/ui';
 
-type Props = {
-  onOpenLogin: () => void;
-};
+import { createAuthStyles } from '../authStyles';
 
-export function RegisterScreen({ onOpenLogin }: Props) {
+export function RegisterScreen({ onOpenLogin }: { onOpenLogin: () => void }) {
   const { t } = useTranslation();
-  const { register } = useAuth();
+  const register = useRegister();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createAuthStyles(colors), [colors]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const onSubmit = () => {
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim();
-    if (!trimmedName || trimmedName.length > 100) {
+    const nameValue = name.trim();
+    const emailValue = email.trim();
+    if (!nameValue) {
       toast.show('error', t('auth.errorName'));
       return;
     }
-    if (
-      !trimmedEmail ||
-      !trimmedEmail.includes('@') ||
-      trimmedEmail.length > 255
-    ) {
+    if (!emailValue || !emailValue.includes('@')) {
       toast.show('error', t('auth.errorEmail'));
       return;
     }
-    if (password.length < 8 || password.length > 72) {
+    if (!password) {
       toast.show('error', t('auth.errorPassword'));
       return;
     }
-
-    register.mutate({
-      name: trimmedName,
-      email: trimmedEmail,
-      password,
-    });
+    register.mutate({ name: nameValue, email: emailValue, password });
   };
 
   return (
@@ -64,10 +52,10 @@ export function RegisterScreen({ onOpenLogin }: Props) {
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.wrap}
+        style={styles.container}
       >
         <ScrollView
-          contentContainerStyle={styles.form}
+          contentContainerStyle={styles.formScroll}
           keyboardShouldPersistTaps="handled"
         >
           <Text style={styles.title}>{t('auth.registerTitle')}</Text>
@@ -77,7 +65,6 @@ export function RegisterScreen({ onOpenLogin }: Props) {
             value={name}
             onChangeText={setName}
             autoCapitalize="words"
-            maxLength={100}
             placeholder={t('auth.namePlaceholder')}
             placeholderTextColor={colors.textMuted}
             style={styles.input}
@@ -90,7 +77,6 @@ export function RegisterScreen({ onOpenLogin }: Props) {
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
-            maxLength={255}
             placeholder={t('auth.emailPlaceholder')}
             placeholderTextColor={colors.textMuted}
             style={styles.input}
@@ -101,7 +87,6 @@ export function RegisterScreen({ onOpenLogin }: Props) {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            maxLength={72}
             placeholder={t('auth.passwordPlaceholder')}
             placeholderTextColor={colors.textMuted}
             style={styles.input}
@@ -121,58 +106,4 @@ export function RegisterScreen({ onOpenLogin }: Props) {
       </KeyboardAvoidingView>
     </AppScreen>
   );
-}
-
-function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
-  return StyleSheet.create({
-    screen: {
-      justifyContent: 'center',
-      paddingHorizontal: 16,
-    },
-    wrap: {
-      flex: 1,
-      justifyContent: 'center',
-    },
-    form: {
-      flexGrow: 1,
-      justifyContent: 'center',
-      gap: 8,
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: '700',
-      color: colors.primary,
-      marginBottom: 16,
-    },
-    label: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: colors.textMuted,
-      marginTop: 8,
-    },
-    input: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.background,
-      color: colors.text,
-      borderRadius: 10,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      fontSize: 16,
-    },
-    submit: {
-      marginTop: 20,
-      alignSelf: 'stretch',
-      minWidth: undefined,
-    },
-    link: {
-      alignItems: 'center',
-      paddingVertical: 12,
-    },
-    linkText: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.primary,
-    },
-  });
 }

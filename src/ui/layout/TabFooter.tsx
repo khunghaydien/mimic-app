@@ -15,11 +15,11 @@ const TAB_ICONS: Record<ModuleId, ComponentType<IconProps>> = {
 };
 
 type Props = {
-  activeId: ModuleId;
+  activeTab: ModuleId;
   onSelect: (id: ModuleId) => void;
 };
 
-export function TabFooter({ activeId, onSelect }: Props) {
+export function TabFooter({ activeTab, onSelect }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -28,8 +28,8 @@ export function TabFooter({ activeId, onSelect }: Props) {
   return (
     <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
       {MODULES.map((id) => {
-        const active = id === activeId;
-        const tint = active ? colors.primary : colors.footerInactive;
+        const active = id === activeTab;
+        const iconColor = active ? colors.primary : colors.footerInactive;
         const Icon = TAB_ICONS[id];
 
         return (
@@ -41,8 +41,8 @@ export function TabFooter({ activeId, onSelect }: Props) {
             accessibilityState={{ selected: active }}
             accessibilityLabel={t(`tabs.${id}`)}
           >
-            <Icon color={tint} />
-            <Text style={[styles.label, { color: tint }]}>
+            <Icon color={iconColor} />
+            <Text style={[styles.label, { color: iconColor }]}>
               {t(`tabs.${id}`)}
             </Text>
           </Pressable>

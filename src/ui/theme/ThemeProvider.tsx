@@ -2,8 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Component, createContext, useContext, type ReactNode } from 'react';
 import { Appearance } from 'react-native';
 
-export type ThemeMode = 'light' | 'dark';
-export type PrimaryId = 'orange' | 'blue' | 'green' | 'purple' | 'red';
+type ThemeMode = 'light' | 'dark';
+type PrimaryId = 'orange' | 'blue' | 'green' | 'purple' | 'red';
 
 export const PRIMARY_PRESETS: {
   id: PrimaryId;
@@ -39,16 +39,15 @@ const dark = {
   onPrimary: '#FFFFFF',
 };
 
-function colorsOf(mode: ThemeMode, primaryId: PrimaryId) {
-  const primary =
-    PRIMARY_PRESETS.find((item) => item.id === primaryId)?.hex ?? '#FF7A00';
+function getThemeColors(mode: ThemeMode, primaryId: PrimaryId) {
+  const primary = PRIMARY_PRESETS.find((item) => item.id === primaryId)!.hex;
   return { ...(mode === 'dark' ? dark : light), primary };
 }
 
 type ThemeValue = {
   mode: ThemeMode;
   primaryId: PrimaryId;
-  colors: ReturnType<typeof colorsOf>;
+  colors: ReturnType<typeof getThemeColors>;
   setMode: (mode: ThemeMode) => void;
   setPrimaryId: (id: PrimaryId) => void;
 };
@@ -56,7 +55,7 @@ type ThemeValue = {
 const ThemeContext = createContext<ThemeValue>({
   mode: 'light',
   primaryId: 'orange',
-  colors: colorsOf('light', 'orange'),
+  colors: getThemeColors('light', 'orange'),
   setMode: () => undefined,
   setPrimaryId: () => undefined,
 });
@@ -98,7 +97,7 @@ export class ThemeProvider extends Component<
         value={{
           mode,
           primaryId,
-          colors: colorsOf(mode, primaryId),
+          colors: getThemeColors(mode, primaryId),
           setMode: this.setMode,
           setPrimaryId: this.setPrimaryId,
         }}

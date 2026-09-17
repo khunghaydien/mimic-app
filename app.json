@@ -22,6 +22,16 @@
       "package": "com.phunghuudat.mimicapp",
       "usesCleartextTraffic": true
     },
+    "plugins": [
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }
