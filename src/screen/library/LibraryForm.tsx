@@ -1,4 +1,13 @@
-import { createElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  createElement,
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -208,17 +217,16 @@ export function LibraryForm({
     });
   };
 
-  const updateQuestionField = (
-    index: number,
-    field: 'content' | 'hint',
-    value: string,
-  ) => {
-    setQuestions((current) =>
-      current.map((row, rowIndex) =>
-        rowIndex === index ? { ...row, [field]: value } : row,
-      ),
-    );
-  };
+  const updateQuestionField = useCallback(
+    (index: number, field: 'content' | 'hint', value: string) => {
+      setQuestions((current) =>
+        current.map((row, rowIndex) =>
+          rowIndex === index ? { ...row, [field]: value } : row,
+        ),
+      );
+    },
+    [],
+  );
 
   const playingQuestion = playingIndex == null ? null : questions[playingIndex];
 
@@ -335,10 +343,10 @@ export function LibraryForm({
                   </View>
                   <View style={styles.questionFields}>
                     <QuestionField
+                      index={index}
+                      field="content"
                       value={item.content}
-                      onChangeText={(value) =>
-                        updateQuestionField(index, 'content', value)
-                      }
+                      onChangeField={updateQuestionField}
                       placeholder={t('library.questionPlaceholder', {
                         index: index + 1,
                       })}
@@ -346,10 +354,10 @@ export function LibraryForm({
                       style={styles.input}
                     />
                     <QuestionField
+                      index={index}
+                      field="hint"
                       value={item.hint}
-                      onChangeText={(value) =>
-                        updateQuestionField(index, 'hint', value)
-                      }
+                      onChangeField={updateQuestionField}
                       placeholder={t('library.hintPlaceholder', {
                         index: index + 1,
                       })}
@@ -412,18 +420,18 @@ function useQuestionDrag(onMove: (fromIndex: number, toIndex: number) => void) {
     webDragRowProps: (index: number) =>
       Platform.OS === 'web'
         ? {
-            onDragOver: (event: { preventDefault: () => void }) => {
-              event.preventDefault();
-              if (dropIndex !== index) setDropIndex(index);
-            },
-            onDrop: (event: { preventDefault: () => void }) => {
-              event.preventDefault();
-              const fromIndex = dragFromIndex.current;
-              dragFromIndex.current = null;
-              setDropIndex(null);
-              if (fromIndex != null) onMove(fromIndex, index);
-            },
-          }
+          onDragOver: (event: { preventDefault: () => void }) => {
+            event.preventDefault();
+            if (dropIndex !== index) setDropIndex(index);
+          },
+          onDrop: (event: { preventDefault: () => void }) => {
+            event.preventDefault();
+            const fromIndex = dragFromIndex.current;
+            dragFromIndex.current = null;
+            setDropIndex(null);
+            if (fromIndex != null) onMove(fromIndex, index);
+          },
+        }
         : {},
     onDragStart: (index: number) => {
       dragFromIndex.current = index;
@@ -513,15 +521,19 @@ function QuestionDragHandle({
   );
 }
 
-function QuestionField({
+const QuestionField = memo(function QuestionField({
+  index,
+  field,
   value,
-  onChangeText,
+  onChangeField,
   placeholder,
   colors,
   style,
 }: {
+  index: number;
+  field: 'content' | 'hint';
   value: string;
-  onChangeText: (value: string) => void;
+  onChangeField: (index: number, field: 'content' | 'hint', value: string) => void;
   placeholder: string;
   colors: ReturnType<typeof useTheme>['colors'];
   style: object;
@@ -545,7 +557,7 @@ function QuestionField({
       value,
       placeholder,
       onChange: (event: { currentTarget: HTMLTextAreaElement }) => {
-        onChangeText(event.currentTarget.value);
+        onChangeField(index, field, event.currentTarget.value);
         fitTextareaHeight(event.currentTarget);
       },
       style: {
@@ -573,7 +585,7 @@ function QuestionField({
   return (
     <TextInput
       value={value}
-      onChangeText={onChangeText}
+      onChangeText={(text) => onChangeField(index, field, text)}
       placeholder={placeholder}
       placeholderTextColor={colors.textMuted}
       multiline
@@ -582,17 +594,17 @@ function QuestionField({
       style={[style, { minHeight: 46 }]}
     />
   );
-}
+});
 
 function createStyles(
   colors: ReturnType<typeof useTheme>['colors'],
   mode: ReturnType<typeof useTheme>['mode'],
 ) {
   return StyleSheet.create({
-    container: { flex: 1 },
+    container: { flex: 1, paddingBottom: 16 },
     loading: { flex: 1 },
     body: { flex: 1, minHeight: 0 },
-    header: { paddingHorizontal: 16 },
+    header: { paddingHorizontal: 16, paddingBottom: 16 },
     sectionHeader: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -602,7 +614,7 @@ function createStyles(
     },
     sectionLabel: { flex: 1, fontSize: 18, fontWeight: '700', color: colors.text },
     questionList: { flex: 1, minHeight: 0 },
-    questionContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16, gap: 16 },
+    questionContent: { paddingHorizontal: 16, gap: 24 },
     input: {
       borderWidth: 1,
       borderColor: colors.border,

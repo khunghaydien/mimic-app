@@ -78,9 +78,15 @@ function AppShell() {
 
   const isLibraryFormOpen = activeTab === 'library' && libraryForm.status !== 'list';
 
+  const closeLibraryForm = () => {
+    setLibraryForm((current) =>
+      current.status === 'list' ? current : { status: 'list' },
+    );
+  };
+
   const goHome = () => {
     setActiveTab('home');
-    setLibraryForm({ status: 'list' });
+    closeLibraryForm();
   };
 
   return (
@@ -95,12 +101,12 @@ function AppShell() {
         }
         onOpenSetting={() => {
           setActiveTab('setting');
-          setLibraryForm({ status: 'list' });
+          closeLibraryForm();
         }}
         onHome={activeTab !== 'home' && !isLibraryFormOpen ? goHome : undefined}
         onBack={
           isLibraryFormOpen
-            ? () => setLibraryForm({ status: 'list' })
+            ? closeLibraryForm
             : undefined
         }
       />
@@ -109,7 +115,11 @@ function AppShell() {
           <HomeScreen />
         </KeepAliveTab>
         <KeepAliveTab visible={activeTab === 'library'} style={styles}>
-          <LibraryScreen form={libraryForm} onFormChange={setLibraryForm} />
+          <LibraryScreen
+            visible={activeTab === 'library'}
+            form={libraryForm}
+            onFormChange={setLibraryForm}
+          />
         </KeepAliveTab>
         <KeepAliveTab visible={activeTab === 'setting'} style={styles}>
           <SettingScreen />
@@ -119,7 +129,7 @@ function AppShell() {
         activeTab={activeTab}
         onSelect={(tabId) => {
           setActiveTab(tabId);
-          if (tabId !== 'library') setLibraryForm({ status: 'list' });
+          if (tabId !== 'library') closeLibraryForm();
         }}
       />
     </>

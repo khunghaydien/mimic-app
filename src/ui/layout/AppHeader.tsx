@@ -64,11 +64,13 @@ export function AppHeader({ title, onOpenSetting, onHome, onBack }: Props) {
     });
   };
 
-  const windowWidth = Dimensions.get('window').width;
   const menuStyle = anchor
     ? {
         top: anchor.y + anchor.height + MENU_GAP,
-        right: Math.max(8, windowWidth - (anchor.x + anchor.width)),
+        right: Math.max(
+          8,
+          Dimensions.get('window').width - (anchor.x + anchor.width),
+        ),
       }
     : null;
 

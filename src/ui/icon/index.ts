@@ -2,6 +2,7 @@ export { BackIcon } from './BackIcon';
 export { CloseIcon } from './CloseIcon';
 export { DeleteIcon } from './DeleteIcon';
 export { EditIcon } from './EditIcon';
+export { EyeIcon } from './EyeIcon';
 export { GenerateIcon } from './GenerateIcon';
 export { HomeIcon } from './HomeIcon';
 export { LibraryIcon } from './LibraryIcon';

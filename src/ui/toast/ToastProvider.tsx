@@ -10,6 +10,15 @@ export const toast = {
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  return (
+    <>
+      {children}
+      <ToastHost />
+    </>
+  );
+}
+
+function ToastHost() {
   const { colors } = useTheme();
   const [state, setState] = useState<{ type: ToastType; message: string }>({
     type: 'error',
@@ -32,24 +41,21 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  if (!state.message) return null;
+
   return (
-    <>
-      {children}
-      {state.message ? (
-        <Pressable
-          onPress={() => setState((current) => ({ ...current, message: '' }))}
-          style={[
-            styles.toast,
-            {
-              backgroundColor:
-                state.type === 'success' ? colors.success : colors.danger,
-            },
-          ]}
-        >
-          <Text style={styles.text}>{state.message}</Text>
-        </Pressable>
-      ) : null}
-    </>
+    <Pressable
+      onPress={() => setState((current) => ({ ...current, message: '' }))}
+      style={[
+        styles.toast,
+        {
+          backgroundColor:
+            state.type === 'success' ? colors.success : colors.danger,
+        },
+      ]}
+    >
+      <Text style={styles.text}>{state.message}</Text>
+    </Pressable>
   );
 }
 

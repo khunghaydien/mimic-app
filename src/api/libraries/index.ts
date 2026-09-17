@@ -1,4 +1,6 @@
 export {
+  canManageLibrary,
+  useLibraryDetail,
   useLibraryList,
   useLibraryForm,
   type LibraryListItem,

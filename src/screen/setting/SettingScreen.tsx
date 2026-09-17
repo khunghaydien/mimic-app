@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -8,7 +8,7 @@ import { AppScreen, PRIMARY_PRESETS, useTheme } from '@/ui';
 import { ColorButton } from './ColorButton';
 import { OptionButton } from './OptionButton';
 
-export function SettingScreen() {
+export const SettingScreen = memo(function SettingScreen() {
   const { t, i18n } = useTranslation();
   const { mode, setMode, primaryId, setPrimaryId, colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -66,7 +66,7 @@ export function SettingScreen() {
       </View>
     </AppScreen>
   );
-}
+});
 
 function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
   return StyleSheet.create({

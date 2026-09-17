@@ -4,6 +4,7 @@ import { useTheme } from '../theme';
 
 export function LoadingOverlay({ visible }: { visible: boolean }) {
   const { colors } = useTheme();
+  if (!visible) return null;
 
   return (
     <Modal

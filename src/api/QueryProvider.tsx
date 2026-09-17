@@ -117,17 +117,17 @@ class Api {
     }
 
     try {
-      console.log('[api] request', method, path, body ?? '');
+      if (__DEV__) console.log('[api] request', method, path, body ?? '');
       const response = await fetch(`${BASE_URL}${path}`, {
         method,
         headers,
         body: body === undefined ? undefined : JSON.stringify(body),
       });
       const payload = (await response.json()) as ApiResponse<T>;
-      console.log('[api] response', response.status, path, payload);
+      if (__DEV__) console.log('[api] response', response.status, path, payload);
       return payload;
     } catch (error) {
-      console.log('[api] error', method, path, error);
+      if (__DEV__) console.log('[api] error', method, path, error);
       toast.show('error', 'Network request failed');
       throw new Error('Network request failed');
     }

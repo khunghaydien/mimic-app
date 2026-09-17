@@ -31,6 +31,7 @@ export class AuthProvider extends Component<
   { session: AuthSession | null; ready: boolean }
 > {
   state = { session: null as AuthSession | null, ready: false };
+  private authValue: AuthValue | null = null;
 
   async componentDidMount() {
     api.onAuth = (session) => {
@@ -67,15 +68,19 @@ export class AuthProvider extends Component<
 
   render() {
     const { session, ready } = this.state;
+    const user = session?.user ?? null;
+    let authValue = this.authValue;
+    if (!authValue || authValue.user !== user || authValue.ready !== ready) {
+      authValue = {
+        user,
+        ready,
+        setSession: this.setSession,
+        logout: this.logout,
+      };
+      this.authValue = authValue;
+    }
     return (
-      <AuthContext.Provider
-        value={{
-          user: session?.user ?? null,
-          ready,
-          setSession: this.setSession,
-          logout: this.logout,
-        }}
-      >
+      <AuthContext.Provider value={authValue}>
         {this.props.children}
       </AuthContext.Provider>
     );

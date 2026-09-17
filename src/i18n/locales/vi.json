@@ -31,6 +31,7 @@
     "save": "Lưu",
     "delete": "Xóa",
     "edit": "Sửa",
+    "view": "Xem",
     "deleteConfirmTitle": "Xóa thư viện",
     "deleteConfirm": "Xóa \"{{title}}\"? Hành động này không thể hoàn tác.",
     "cancel": "Hủy",

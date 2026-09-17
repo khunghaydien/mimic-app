@@ -68,6 +68,7 @@ export class ThemeProvider extends Component<
     mode: (Appearance.getColorScheme() === 'dark' ? 'dark' : 'light') as ThemeMode,
     primaryId: 'orange' as PrimaryId,
   };
+  private themeValue: ThemeValue | null = null;
 
   async componentDidMount() {
     const [mode, primaryId] = await Promise.all([
@@ -92,16 +93,23 @@ export class ThemeProvider extends Component<
 
   render() {
     const { mode, primaryId } = this.state;
+    let themeValue = this.themeValue;
+    if (
+      !themeValue ||
+      themeValue.mode !== mode ||
+      themeValue.primaryId !== primaryId
+    ) {
+      themeValue = {
+        mode,
+        primaryId,
+        colors: getThemeColors(mode, primaryId),
+        setMode: this.setMode,
+        setPrimaryId: this.setPrimaryId,
+      };
+      this.themeValue = themeValue;
+    }
     return (
-      <ThemeContext.Provider
-        value={{
-          mode,
-          primaryId,
-          colors: getThemeColors(mode, primaryId),
-          setMode: this.setMode,
-          setPrimaryId: this.setPrimaryId,
-        }}
-      >
+      <ThemeContext.Provider value={themeValue}>
         {this.props.children}
       </ThemeContext.Provider>
     );

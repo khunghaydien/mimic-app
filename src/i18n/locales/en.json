@@ -31,6 +31,7 @@
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",
+    "view": "View",
     "deleteConfirmTitle": "Delete library",
     "deleteConfirm": "Delete \"{{title}}\"? This cannot be undone.",
     "cancel": "Cancel",

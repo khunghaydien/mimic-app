@@ -22,24 +22,6 @@ export function QuestionAudioModal({
   const { t } = useTranslation();
   const { colors, mode } = useTheme();
   const styles = useMemo(() => createStyles(colors, mode), [colors, mode]);
-  const player = useAudioPlayer(
-    `${process.env.EXPO_PUBLIC_CLOUDFLARE_PUBLIC_URL}${audioUrl}`,
-  );
-  const status = useAudioPlayerStatus(player);
-  const playing = status.playing && !status.didJustFinish;
-
-  useEffect(() => {
-    void setAudioModeAsync({ playsInSilentMode: true }).then(() => player.play());
-  }, [player]);
-
-  const onTogglePlay = () => {
-    if (playing) {
-      player.pause();
-      return;
-    }
-    if (status.didJustFinish) player.seekTo(0);
-    player.play();
-  };
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
@@ -54,23 +36,7 @@ export function QuestionAudioModal({
               <CloseIcon color={colors.text} />
             </IconButton>
           </View>
-          <View style={styles.audioRow}>
-            <IconButton
-              label={playing ? t('library.pauseAudio') : t('library.playAudio')}
-              onPress={onTogglePlay}
-              style={styles.playButton}
-            >
-              {playing ? (
-                <PauseIcon color={colors.primary} />
-              ) : (
-                <PlayIcon color={colors.primary} />
-              )}
-            </IconButton>
-            <AudioBars playing={playing} color={colors.primary} />
-            <Text style={styles.time}>
-              {formatTime(status.currentTime)} / {formatTime(status.duration)}
-            </Text>
-          </View>
+          <AudioPlayer audioUrl={audioUrl} styles={styles} />
           <Text style={styles.content}>{content}</Text>
           {hint ? <Text style={styles.hint}>{hint}</Text> : null}
         </View>
@@ -79,29 +45,80 @@ export function QuestionAudioModal({
   );
 }
 
+function AudioPlayer({
+  audioUrl,
+  styles,
+}: {
+  audioUrl: string;
+  styles: ReturnType<typeof createStyles>;
+}) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const player = useAudioPlayer(
+    `${process.env.EXPO_PUBLIC_CLOUDFLARE_PUBLIC_URL}${audioUrl}`,
+    { updateInterval: 1000 },
+  );
+  const status = useAudioPlayerStatus(player);
+  const playing = status.playing && !status.didJustFinish;
+
+  useEffect(() => {
+    void setAudioModeAsync({ playsInSilentMode: true }).then(() => player.play());
+    return () => player.pause();
+  }, [player]);
+
+  const onTogglePlay = () => {
+    if (playing) {
+      player.pause();
+      return;
+    }
+    if (status.didJustFinish) player.seekTo(0);
+    player.play();
+  };
+
+  return (
+    <View style={styles.audioRow}>
+      <IconButton
+        label={playing ? t('library.pauseAudio') : t('library.playAudio')}
+        onPress={onTogglePlay}
+        style={styles.playButton}
+      >
+        {playing ? (
+          <PauseIcon color={colors.primary} />
+        ) : (
+          <PlayIcon color={colors.primary} />
+        )}
+      </IconButton>
+      <AudioBars playing={playing} color={colors.primary} />
+      <Text style={styles.time}>
+        {formatTime(status.currentTime)} / {formatTime(status.duration)}
+      </Text>
+    </View>
+  );
+}
+
 function AudioBars({ playing, color }: { playing: boolean; color: string }) {
   const bars = useMemo(
-    () => BAR_HEIGHTS.map((height) => new Animated.Value(height)),
+    () => BAR_SCALES.map((scale) => new Animated.Value(scale)),
     [],
   );
 
   useEffect(() => {
     if (!playing) {
-      bars.forEach((bar, index) => bar.setValue(BAR_HEIGHTS[index]));
+      bars.forEach((bar, index) => bar.setValue(BAR_SCALES[index]));
       return;
     }
     const waves = bars.map((bar, index) =>
       Animated.loop(
         Animated.sequence([
           Animated.timing(bar, {
-            toValue: Math.min(24, BAR_HEIGHTS[index] + 6),
+            toValue: Math.min(1, BAR_SCALES[index] + 0.25),
             duration: 320 + index * 40,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
           Animated.timing(bar, {
-            toValue: Math.max(8, BAR_HEIGHTS[index] - 6),
+            toValue: Math.max(0.33, BAR_SCALES[index] - 0.25),
             duration: 320 + index * 40,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
         ]),
       ),
@@ -115,7 +132,10 @@ function AudioBars({ playing, color }: { playing: boolean; color: string }) {
       {bars.map((bar, index) => (
         <Animated.View
           key={index}
-          style={[barStyles.bar, { backgroundColor: color, height: bar }]}
+          style={[
+            barStyles.bar,
+            { backgroundColor: color, transform: [{ scaleY: bar }] },
+          ]}
         />
       ))}
     </View>
@@ -123,6 +143,7 @@ function AudioBars({ playing, color }: { playing: boolean; color: string }) {
 }
 
 const BAR_HEIGHTS = [8, 12, 16, 20, 24, 20, 16, 12, 8];
+const BAR_SCALES = BAR_HEIGHTS.map((height) => height / 24);
 
 const barStyles = StyleSheet.create({
   row: {
@@ -133,7 +154,7 @@ const barStyles = StyleSheet.create({
     justifyContent: 'center',
     gap: 3,
   },
-  bar: { width: 4, borderRadius: 2 },
+  bar: { width: 4, height: 24, borderRadius: 2 },
 });
 
 function formatTime(seconds: number) {
