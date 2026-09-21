@@ -8,13 +8,13 @@ import { AUTH_PATHS } from './auth/service';
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-function apiBaseUrl() {
+const apiBaseUrl = () => {
   const url = process.env.EXPO_PUBLIC_BASE_URL ?? '';
   if (Platform.OS === 'android') {
     return url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
   }
   return url;
-}
+};
 
 const BASE_URL = apiBaseUrl();
 
@@ -147,19 +147,19 @@ export const queryClient = new QueryClient({
   },
 });
 
-function MutationLoadingOverlay() {
+const MutationLoadingOverlay = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => api.onMutating((count) => setVisible(count > 0)), []);
 
   return <LoadingOverlay visible={visible} />;
-}
+};
 
-export function QueryProvider({ children }: { children: ReactNode }) {
+export const QueryProvider = ({ children }: { children: ReactNode }) => {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
       <MutationLoadingOverlay />
     </QueryClientProvider>
   );
-}
+};

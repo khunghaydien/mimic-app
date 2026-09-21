@@ -2,7 +2,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import type { IconProps } from './types';
 
-export function LibraryIcon({ color }: IconProps) {
+export const LibraryIcon = ({ color }: IconProps) => {
   return (
     <Svg width={20} height={20} viewBox="0 0 24 24">
       <Path
@@ -11,4 +11,4 @@ export function LibraryIcon({ color }: IconProps) {
       />
     </Svg>
   );
-}
+};

@@ -34,7 +34,7 @@ type Anchor = {
 const MENU_WIDTH = 260;
 const MENU_GAP = 6;
 
-export function AppHeader({ title, onOpenSetting, onHome, onBack }: Props) {
+export const AppHeader = ({ title, onOpenSetting, onHome, onBack }: Props) => {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const { name, email, avatarUrl } = user!;
@@ -169,9 +169,9 @@ export function AppHeader({ title, onOpenSetting, onHome, onBack }: Props) {
       </Modal>
     </View>
   );
-}
+};
 
-function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => {
   return StyleSheet.create({
     header: {
       flexDirection: 'row',
@@ -273,4 +273,4 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       color: colors.danger,
     },
   });
-}
+};

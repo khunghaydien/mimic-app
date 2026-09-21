@@ -9,7 +9,7 @@ type Props = {
   onPress: () => void;
 };
 
-export function OptionButton({ label, selected = false, onPress }: Props) {
+export const OptionButton = ({ label, selected = false, onPress }: Props) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -22,9 +22,9 @@ export function OptionButton({ label, selected = false, onPress }: Props) {
       accessibilityState={{ selected }}
     />
   );
-}
+};
 
-function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => {
   return StyleSheet.create({
     default: {
       backgroundColor: colors.background,
@@ -41,4 +41,4 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       color: colors.onPrimary,
     },
   });
-}
+};

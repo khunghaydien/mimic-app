@@ -19,7 +19,7 @@ type Props = {
   onSelect: (id: ModuleId) => void;
 };
 
-export function TabFooter({ activeTab, onSelect }: Props) {
+export const TabFooter = ({ activeTab, onSelect }: Props) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -50,9 +50,9 @@ export function TabFooter({ activeTab, onSelect }: Props) {
       })}
     </View>
   );
-}
+};
 
-function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => {
   return StyleSheet.create({
     footer: {
       flexDirection: 'row',
@@ -74,4 +74,4 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       fontWeight: '600',
     },
   });
-}
+};

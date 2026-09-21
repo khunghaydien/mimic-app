@@ -10,14 +10,14 @@ type Props = {
   children: ReactNode;
 };
 
-export function IconButton({
+export const IconButton = ({
   label,
   onPress,
   disabled,
   hitSlop = 8,
   style,
   children,
-}: Props) {
+}: Props) => {
   return (
     <Pressable
       onPress={onPress}
@@ -30,4 +30,4 @@ export function IconButton({
       <View pointerEvents="none">{children}</View>
     </Pressable>
   );
-}
+};

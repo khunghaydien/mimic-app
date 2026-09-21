@@ -2,7 +2,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import type { IconProps } from './types';
 
-export function HomeIcon({ color }: IconProps) {
+export const HomeIcon = ({ color }: IconProps) => {
   return (
     <Svg width={22} height={20} viewBox="0 0 22 20">
       <Path
@@ -11,4 +11,4 @@ export function HomeIcon({ color }: IconProps) {
       />
     </Svg>
   );
-}
+};

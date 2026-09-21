@@ -1,352 +1,61 @@
-import { memo, useCallback, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
+import { memo, useCallback } from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import { canManageLibrary, useLibraryList, type LibraryListItem, useAuth } from '@/api';
-import { AppButton, AppScreen, IconButton, useTheme } from '@/ui';
-import { EditIcon, DeleteIcon, EyeIcon } from '@/ui/icon';
+import { LibraryScreenCreate } from './component/LibraryScreenCreate';
+import { LibraryScreenList } from './component/LibraryScreenList';
+import { LibraryScreenUpdate } from './component/LibraryScreenUpdate';
+import { LibraryScreenView } from './component/LibraryScreenView';
 
-import { LibraryForm } from './LibraryForm';
-import { LibraryView } from './LibraryView';
-
-export type LibraryFormState =
+export type LibraryScreenState =
   | { status: 'list' }
   | { status: 'create' }
-  | { status: 'edit'; libraryId: string }
+  | { status: 'update'; libraryId: string }
   | { status: 'view'; libraryId: string };
 
-type LibraryStyles = ReturnType<typeof createStyles>;
-
-export const LibraryScreen = memo(function LibraryScreen({
+export const LibraryScreen = memo(({
   visible,
-  form,
-  onFormChange,
+  screen,
+  onScreenChange,
 }: {
   visible: boolean;
-  form: LibraryFormState;
-  onFormChange: (form: LibraryFormState) => void;
-}) {
+  screen: LibraryScreenState;
+  onScreenChange: (screen: LibraryScreenState) => void;
+}) => {
   const onClose = useCallback(
-    () => onFormChange({ status: 'list' }),
-    [onFormChange],
+    () => onScreenChange({ status: 'list' }),
+    [onScreenChange],
   );
-
-  if (form.status === 'view') {
-    return (
-      <AppScreen style={listScreenStyle}>
-        <LibraryView libraryId={form.libraryId} />
-      </AppScreen>
-    );
-  }
-
-  if (form.status !== 'list') {
-    return (
-      <AppScreen style={listScreenStyle}>
-        <LibraryForm
-          libraryId={form.status === 'edit' ? form.libraryId : null}
-          onClose={onClose}
-        />
-      </AppScreen>
-    );
-  }
-
-  return <LibraryList visible={visible} onFormChange={onFormChange} />;
-});
-
-function LibraryList({
-  visible,
-  onFormChange,
-}: {
-  visible: boolean;
-  onFormChange: (form: LibraryFormState) => void;
-}) {
-  const { t } = useTranslation();
-  const { user } = useAuth();
-  const { colors, mode } = useTheme();
-  const styles = useMemo(() => createStyles(colors, mode), [colors, mode]);
-  const [searchText, setSearchText] = useState('');
-  const [appliedSearch, setAppliedSearch] = useState('');
-  const [libraryToDelete, setLibraryToDelete] = useState<LibraryListItem | null>(
-    null,
-  );
-  const { list, remove } = useLibraryList(appliedSearch || undefined, visible);
-  const items = useMemo(
-    () => list.data?.pages.flatMap((page) => page.items) ?? [],
-    [list.data],
-  );
-
-  const onOpen = useCallback(
-    (item: LibraryListItem, canManage: boolean) => {
-      onFormChange(
-        canManage
-          ? { status: 'edit', libraryId: item.id }
-          : { status: 'view', libraryId: item.id },
-      );
-    },
-    [onFormChange],
-  );
-  const onAskDelete = useCallback((item: LibraryListItem) => {
-    setLibraryToDelete(item);
-  }, []);
-  const renderItem = useCallback(
-    ({ item }: { item: LibraryListItem }) => (
-      <LibraryCard
-        item={item}
-        canManage={canManageLibrary(item.creator, user!)}
-        styles={styles}
-        colors={colors}
-        onOpen={onOpen}
-        onAskDelete={onAskDelete}
-      />
-    ),
-    [styles, colors, user, onOpen, onAskDelete],
-  );
+  const libraryId = 'libraryId' in screen ? screen.libraryId : '';
+  const listHidden = {
+    list: false,
+    create: true,
+    update: true,
+    view: true,
+  }[screen.status];
+  const overlay = {
+    list: () => null,
+    create: () => <LibraryScreenCreate onClose={onClose} />,
+    update: () => <LibraryScreenUpdate libraryId={libraryId} />,
+    view: () => <LibraryScreenView libraryId={libraryId} />,
+  }[screen.status]();
 
   return (
-    <AppScreen style={styles.screen}>
-      <TextInput
-        value={searchText}
-        onChangeText={setSearchText}
-        placeholder={t('library.searchPlaceholder')}
-        placeholderTextColor={colors.text}
-        style={styles.search}
-        returnKeyType="search"
-        onSubmitEditing={() => setAppliedSearch(searchText.trim())}
-      />
-
-      <FlatList
-        data={items}
-        keyExtractor={libraryKey}
-        style={styles.listContainer}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          list.isFetching && !list.isFetchingNextPage ? (
-            <ActivityIndicator color={colors.primary} style={styles.loading} />
-          ) : (
-            <Text style={styles.empty}>{t('library.empty')}</Text>
-          )
-        }
-        renderItem={renderItem}
-        initialNumToRender={8}
-        maxToRenderPerBatch={8}
-        windowSize={7}
-        removeClippedSubviews
-        onEndReached={() => {
-          if (list.hasNextPage && !list.isFetchingNextPage) void list.fetchNextPage();
-        }}
-        onEndReachedThreshold={0.4}
-        ListFooterComponent={
-          list.isFetchingNextPage ? (
-            <ActivityIndicator color={colors.primary} style={styles.loadingMore} />
-          ) : null
-        }
-      />
-
-      <View style={styles.createBar}>
-        <AppButton
-          label={t('library.create')}
-          onPress={() => onFormChange({ status: 'create' })}
-          style={styles.create}
-        />
-      </View>
-
-      <Modal
-        visible={libraryToDelete != null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setLibraryToDelete(null)}
+    <View style={styles.fill}>
+      <View
+        style={[styles.fill, listHidden && styles.hidden]}
+        pointerEvents={listHidden ? 'none' : 'auto'}
       >
-        <View style={styles.overlay}>
-          <Pressable
-            style={StyleSheet.absoluteFill}
-            onPress={() => setLibraryToDelete(null)}
-          />
-          <View style={styles.sheet}>
-            <Text style={styles.confirmTitle}>{t('library.deleteConfirmTitle')}</Text>
-            <Text style={styles.confirmText}>
-              {t('library.deleteConfirm', { title: libraryToDelete?.title })}
-            </Text>
-            <View style={styles.confirmActions}>
-              <AppButton
-                label={t('library.cancel')}
-                onPress={() => setLibraryToDelete(null)}
-                style={styles.cancel}
-                labelStyle={styles.cancelLabel}
-              />
-              <AppButton
-                label={t('library.delete')}
-                onPress={() => {
-                  if (!libraryToDelete) return;
-                  remove.mutate(libraryToDelete.id, {
-                    onSuccess: () => setLibraryToDelete(null),
-                  });
-                }}
-                style={styles.delete}
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </AppScreen>
-  );
-}
-
-const libraryKey = (item: LibraryListItem) => item.id;
-const listScreenStyle = { paddingBottom: 0 };
-
-const LibraryCard = memo(function LibraryCard({
-  item,
-  canManage,
-  styles,
-  colors,
-  onOpen,
-  onAskDelete,
-}: {
-  item: LibraryListItem;
-  canManage: boolean;
-  styles: LibraryStyles;
-  colors: ReturnType<typeof useTheme>['colors'];
-  onOpen: (item: LibraryListItem, canManage: boolean) => void;
-  onAskDelete: (item: LibraryListItem) => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle} numberOfLines={1}>
-          {item.title}
-        </Text>
-        <View style={styles.actions}>
-          {canManage ? (
-            <>
-              <IconButton
-                label={t('library.edit')}
-                onPress={() => onOpen(item, true)}
-                style={styles.iconButton}
-              >
-                <EditIcon color={colors.text} />
-              </IconButton>
-              <IconButton
-                label={t('library.delete')}
-                onPress={() => onAskDelete(item)}
-                style={styles.iconButton}
-              >
-                <DeleteIcon color={colors.danger} />
-              </IconButton>
-            </>
-          ) : (
-            <IconButton
-              label={t('library.view')}
-              onPress={() => onOpen(item, false)}
-              style={styles.iconButton}
-            >
-              <EyeIcon color={colors.text} />
-            </IconButton>
-          )}
-        </View>
+        <LibraryScreenList
+          visible={visible && !listHidden}
+          onScreenChange={onScreenChange}
+        />
       </View>
-      <Text style={styles.meta}>
-        {t('library.fieldId')}: {item.id}
-      </Text>
-      <Text style={styles.meta}>
-        {t('library.fieldCreator')}: {item.creator}
-      </Text>
-      <Text style={styles.meta}>
-        {t('library.fieldQuestions')}: {item.questionCount}
-      </Text>
-      <Text style={styles.meta}>
-        {t('library.fieldCreated')}: {new Date(item.createdAt).toLocaleString()}
-      </Text>
-      <Text style={styles.meta}>
-        {t('library.fieldUpdated')}: {new Date(item.updatedAt).toLocaleString()}
-      </Text>
+      {overlay}
     </View>
   );
 });
 
-function createStyles(
-  colors: ReturnType<typeof useTheme>['colors'],
-  mode: ReturnType<typeof useTheme>['mode'],
-) {
-  const surface = mode === 'dark' ? '#1A222C' : '#FFFFFF';
-  return StyleSheet.create({
-    screen: { paddingBottom: 0 },
-    search: {
-      marginHorizontal: 16,
-      marginBottom: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: surface,
-      borderRadius: 10,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      fontSize: 16,
-      color: colors.text,
-    },
-    createBar: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
-    create: { alignSelf: 'stretch', minWidth: undefined },
-    loading: { flex: 1, marginTop: 24 },
-    loadingMore: { marginVertical: 12 },
-    listContainer: { flex: 1 },
-    list: { paddingHorizontal: 16, gap: 12 },
-    empty: { textAlign: 'center', color: colors.textMuted, marginTop: 32 },
-    card: {
-      backgroundColor: surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 12,
-      padding: 16,
-      gap: 6,
-    },
-    cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-    cardTitle: {
-      flex: 1,
-      minWidth: 0,
-      fontSize: 18,
-      fontWeight: '700',
-      color: colors.text,
-    },
-    actions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    iconButton: {
-      width: 32,
-      height: 32,
-      borderRadius: 8,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: mode === 'dark' ? '#243040' : '#F0F2F5',
-    },
-    meta: { fontSize: 13, color: colors.textMuted },
-    overlay: {
-      flex: 1,
-      justifyContent: 'center',
-      paddingHorizontal: 24,
-      backgroundColor: 'rgba(0,0,0,0.45)',
-    },
-    sheet: { backgroundColor: surface, borderRadius: 12, padding: 16, gap: 12 },
-    confirmTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-    confirmText: { fontSize: 14, color: colors.textMuted, lineHeight: 20 },
-    confirmActions: { flexDirection: 'row', gap: 8 },
-    cancel: {
-      flex: 1,
-      minWidth: undefined,
-      backgroundColor: surface,
-      borderColor: colors.border,
-    },
-    cancelLabel: { color: colors.text },
-    delete: {
-      flex: 1,
-      minWidth: undefined,
-      backgroundColor: colors.danger,
-      borderColor: colors.danger,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  fill: { flex: 1 },
+  hidden: { display: 'none' },
+});

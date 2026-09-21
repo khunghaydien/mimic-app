@@ -4,11 +4,10 @@ import { useTranslation } from 'react-i18next';
 
 import { setAppLanguage } from '@/i18n';
 import { AppScreen, PRIMARY_PRESETS, useTheme } from '@/ui';
+import { ColorButton } from '@/ui/button/ColorButton';
+import { OptionButton } from '@/ui/button/OptionButton';
 
-import { ColorButton } from './ColorButton';
-import { OptionButton } from './OptionButton';
-
-export const SettingScreen = memo(function SettingScreen() {
+export const SettingScreen = memo(() => {
   const { t, i18n } = useTranslation();
   const { mode, setMode, primaryId, setPrimaryId, colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -68,7 +67,7 @@ export const SettingScreen = memo(function SettingScreen() {
   );
 });
 
-function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => {
   return StyleSheet.create({
     content: {
       paddingHorizontal: 16,
@@ -96,4 +95,4 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       width: '100%',
     },
   });
-}
+};

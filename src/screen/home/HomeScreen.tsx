@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/api';
 import { AppScreen, useTheme } from '@/ui';
 
-export const HomeScreen = memo(function HomeScreen() {
+export const HomeScreen = memo(() => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { colors } = useTheme();

@@ -34,6 +34,8 @@
     "view": "Xem",
     "deleteConfirmTitle": "Xóa thư viện",
     "deleteConfirm": "Xóa \"{{title}}\"? Hành động này không thể hoàn tác.",
+    "deleteQuestionConfirmTitle": "Xóa câu hỏi",
+    "deleteQuestionConfirm": "Xóa câu hỏi này? Hành động này không thể hoàn tác.",
     "cancel": "Hủy",
     "errorTitle": "Tiêu đề không được trống",
     "errorQuestion": "Câu hỏi không được trống"

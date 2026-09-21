@@ -21,14 +21,14 @@ void i18n.use(initReactI18next).init({
   react: { useSuspense: false },
 });
 
-export async function loadSavedLanguage() {
+export const loadSavedLanguage = async () => {
   const saved = await AsyncStorage.getItem(STORAGE_KEY);
   if (saved === 'en' || saved === 'vi') {
     await i18n.changeLanguage(saved);
   }
-}
+};
 
-export async function setAppLanguage(lang: AppLanguage) {
+export const setAppLanguage = async (lang: AppLanguage) => {
   await i18n.changeLanguage(lang);
   await AsyncStorage.setItem(STORAGE_KEY, lang);
-}
+};

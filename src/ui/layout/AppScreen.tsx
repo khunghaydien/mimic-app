@@ -3,13 +3,13 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useTheme } from '../theme';
 
-export function AppScreen({
+export const AppScreen = ({
   children,
   style,
 }: {
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
-}) {
+}) => {
   const { colors } = useTheme();
   return (
     <View
@@ -21,4 +21,4 @@ export function AppScreen({
       {children}
     </View>
   );
-}
+};

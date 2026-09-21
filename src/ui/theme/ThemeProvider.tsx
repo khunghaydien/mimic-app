@@ -39,10 +39,10 @@ const dark = {
   onPrimary: '#FFFFFF',
 };
 
-function getThemeColors(mode: ThemeMode, primaryId: PrimaryId) {
+const getThemeColors = (mode: ThemeMode, primaryId: PrimaryId) => {
   const primary = PRIMARY_PRESETS.find((item) => item.id === primaryId)!.hex;
   return { ...(mode === 'dark' ? dark : light), primary };
-}
+};
 
 type ThemeValue = {
   mode: ThemeMode;

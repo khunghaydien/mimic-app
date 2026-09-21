@@ -10,20 +10,20 @@ export const AUTH_PATHS = {
   REFRESH: '/auth/refresh',
 };
 
-export function useLogin() {
+export const useLogin = () => {
   const { setSession } = useAuth();
   return useMutation({
     mutationFn: (body: { email: string; password: string }) =>
       api.request<AuthSession>(AUTH_PATHS.LOGIN, 'POST', body),
     onSuccess: setSession,
   });
-}
+};
 
-export function useRegister() {
+export const useRegister = () => {
   const { setSession } = useAuth();
   return useMutation({
     mutationFn: (body: { name: string; email: string; password: string }) =>
       api.request<AuthSession>(AUTH_PATHS.REGISTER, 'POST', body),
     onSuccess: setSession,
   });
-}
+};

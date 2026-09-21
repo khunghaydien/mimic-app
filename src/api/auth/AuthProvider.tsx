@@ -87,6 +87,6 @@ export class AuthProvider extends Component<
   }
 }
 
-export function useAuth() {
+export const useAuth = () => {
   return useContext(AuthContext);
-}
+};

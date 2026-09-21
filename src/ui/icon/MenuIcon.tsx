@@ -2,7 +2,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import type { IconProps } from './types';
 
-export function MenuIcon({ color }: IconProps) {
+export const MenuIcon = ({ color }: IconProps) => {
   return (
     <Svg width={24} height={24} viewBox="0 0 24 24">
       <Path
@@ -11,4 +11,4 @@ export function MenuIcon({ color }: IconProps) {
       />
     </Svg>
   );
-}
+};

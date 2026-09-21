@@ -18,14 +18,14 @@ type Props = {
   accessibilityState?: { disabled?: boolean; selected?: boolean };
 };
 
-export function AppButton({
+export const AppButton = ({
   label,
   onPress,
   disabled = false,
   style,
   labelStyle,
   accessibilityState,
-}: Props) {
+}: Props) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -46,9 +46,9 @@ export function AppButton({
       <Text style={[styles.label, labelStyle]}>{label}</Text>
     </Pressable>
   );
-}
+};
 
-function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => {
   return StyleSheet.create({
     base: {
       alignItems: 'center',
@@ -73,4 +73,4 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       color: colors.onPrimary,
     },
   });
-}
+};

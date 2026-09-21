@@ -34,6 +34,8 @@
     "view": "View",
     "deleteConfirmTitle": "Delete library",
     "deleteConfirm": "Delete \"{{title}}\"? This cannot be undone.",
+    "deleteQuestionConfirmTitle": "Delete question",
+    "deleteQuestionConfirm": "Delete this question? This cannot be undone.",
     "cancel": "Cancel",
     "errorTitle": "Title cannot be empty",
     "errorQuestion": "Question cannot be empty"

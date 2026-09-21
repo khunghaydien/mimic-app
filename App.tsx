@@ -8,12 +8,12 @@ import { AuthProvider, QueryProvider, useAuth } from '@/api';
 import { loadSavedLanguage } from '@/i18n';
 import { type ModuleId } from '@/modules';
 import {
+  AuthScreen,
   HomeScreen,
   LibraryScreen,
-  LoginScreen,
-  RegisterScreen,
   SettingScreen,
-  type LibraryFormState,
+  type AuthScreenState,
+  type LibraryScreenState,
 } from '@/screen';
 import {
   AppHeader,
@@ -23,7 +23,7 @@ import {
   useTheme,
 } from '@/ui';
 
-export default function App() {
+const App = () => {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
@@ -37,20 +37,20 @@ export default function App() {
       </ThemeProvider>
     </SafeAreaProvider>
   );
-}
+};
 
-function AppRoot() {
+const AppRoot = () => {
   const { user, ready } = useAuth();
   const { colors, mode } = useTheme();
   const styles = useMemo(() => createStyles(colors.background), [colors.background]);
-  const [authScreen, setAuthScreen] = useState<'login' | 'register'>('login');
+  const [authScreen, setAuthScreen] = useState<AuthScreenState>({ status: 'login' });
 
   useEffect(() => {
     void loadSavedLanguage();
   }, []);
 
   useEffect(() => {
-    if (user) setAuthScreen('login');
+    if (user) setAuthScreen({ status: 'login' });
   }, [user]);
 
   return (
@@ -58,42 +58,41 @@ function AppRoot() {
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       {!ready ? null : user ? (
         <AppShell />
-      ) : authScreen === 'register' ? (
-        <RegisterScreen onOpenLogin={() => setAuthScreen('login')} />
       ) : (
-        <LoginScreen onOpenRegister={() => setAuthScreen('register')} />
+        <AuthScreen screen={authScreen} onScreenChange={setAuthScreen} />
       )}
     </View>
   );
-}
+};
 
-function AppShell() {
+const AppShell = () => {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors.background), [colors.background]);
   const [activeTab, setActiveTab] = useState<ModuleId>('home');
-  const [libraryForm, setLibraryForm] = useState<LibraryFormState>({
+  const [libraryScreen, setLibraryScreen] = useState<LibraryScreenState>({
     status: 'list',
   });
 
-  const isLibraryFormOpen = activeTab === 'library' && libraryForm.status !== 'list';
+  const isLibraryDetailOpen =
+    activeTab === 'library' && libraryScreen.status !== 'list';
 
-  const closeLibraryForm = () => {
-    setLibraryForm((current) =>
+  const closeLibraryDetail = () => {
+    setLibraryScreen((current) =>
       current.status === 'list' ? current : { status: 'list' },
     );
   };
 
   const goHome = () => {
     setActiveTab('home');
-    closeLibraryForm();
+    closeLibraryDetail();
   };
 
   return (
     <>
       <AppHeader
         title={
-          isLibraryFormOpen
+          isLibraryDetailOpen
             ? t('library.detailTitle')
             : activeTab === 'home'
               ? t('app.name')
@@ -101,12 +100,12 @@ function AppShell() {
         }
         onOpenSetting={() => {
           setActiveTab('setting');
-          closeLibraryForm();
+          closeLibraryDetail();
         }}
-        onHome={activeTab !== 'home' && !isLibraryFormOpen ? goHome : undefined}
+        onHome={activeTab !== 'home' && !isLibraryDetailOpen ? goHome : undefined}
         onBack={
-          isLibraryFormOpen
-            ? closeLibraryForm
+          isLibraryDetailOpen
+            ? closeLibraryDetail
             : undefined
         }
       />
@@ -117,8 +116,8 @@ function AppShell() {
         <KeepAliveTab visible={activeTab === 'library'} style={styles}>
           <LibraryScreen
             visible={activeTab === 'library'}
-            form={libraryForm}
-            onFormChange={setLibraryForm}
+            screen={libraryScreen}
+            onScreenChange={setLibraryScreen}
           />
         </KeepAliveTab>
         <KeepAliveTab visible={activeTab === 'setting'} style={styles}>
@@ -129,14 +128,14 @@ function AppShell() {
         activeTab={activeTab}
         onSelect={(tabId) => {
           setActiveTab(tabId);
-          if (tabId !== 'library') closeLibraryForm();
+          if (tabId !== 'library') closeLibraryDetail();
         }}
       />
     </>
   );
-}
+};
 
-function KeepAliveTab({
+const KeepAliveTab = ({
   visible,
   style,
   children,
@@ -144,7 +143,7 @@ function KeepAliveTab({
   visible: boolean;
   style: ReturnType<typeof createStyles>;
   children: ReactNode;
-}) {
+}) => {
   return (
     <View
       style={[style.fill, !visible && style.hidden]}
@@ -153,11 +152,13 @@ function KeepAliveTab({
       {children}
     </View>
   );
-}
+};
 
-function createStyles(backgroundColor: string) {
+const createStyles = (backgroundColor: string) => {
   return StyleSheet.create({
     fill: { flex: 1, backgroundColor },
     hidden: { display: 'none' },
   });
-}
+};
+
+export default App;

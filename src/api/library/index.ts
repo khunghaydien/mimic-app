@@ -1,5 +1,3 @@
-export { QueryProvider } from './QueryProvider';
-export { AuthProvider, useAuth, useLogin, useRegister } from './auth';
 export {
   canManageLibrary,
   useCreateLibrary,
@@ -11,5 +9,6 @@ export {
   useLibraryList,
   useUpdateLibrary,
   useUpdateQuestion,
-} from './library';
-export type { Library, Question } from './library';
+  type Library,
+  type Question,
+} from './service';

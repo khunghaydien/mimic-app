@@ -2,7 +2,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import type { IconProps } from './types';
 
-export function BackIcon({ color }: IconProps) {
+export const BackIcon = ({ color }: IconProps) => {
   return (
     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
       <Path
@@ -14,4 +14,4 @@ export function BackIcon({ color }: IconProps) {
       />
     </Svg>
   );
-}
+};

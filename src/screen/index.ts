@@ -1,5 +1,4 @@
+export { AuthScreen, type AuthScreenState } from './auth';
 export { HomeScreen } from './home';
-export { LibraryScreen, type LibraryFormState } from './library';
-export { LoginScreen } from './login';
-export { RegisterScreen } from './register';
+export { LibraryScreen, type LibraryScreenState } from './library';
 export { SettingScreen } from './setting';

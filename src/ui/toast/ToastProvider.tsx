@@ -9,16 +9,16 @@ export const toast = {
   show: (_type: ToastType, _message: string) => {},
 };
 
-export function ToastProvider({ children }: { children: ReactNode }) {
+export const ToastProvider = ({ children }: { children: ReactNode }) => {
   return (
     <>
       {children}
       <ToastHost />
     </>
   );
-}
+};
 
-function ToastHost() {
+const ToastHost = () => {
   const { colors } = useTheme();
   const [state, setState] = useState<{ type: ToastType; message: string }>({
     type: 'error',
@@ -57,7 +57,7 @@ function ToastHost() {
       <Text style={styles.text}>{state.message}</Text>
     </Pressable>
   );
-}
+};
 
 const styles = StyleSheet.create({
   toast: {

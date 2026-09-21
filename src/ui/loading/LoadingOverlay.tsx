@@ -2,7 +2,7 @@ import { ActivityIndicator, Modal, StyleSheet, View } from 'react-native';
 
 import { useTheme } from '../theme';
 
-export function LoadingOverlay({ visible }: { visible: boolean }) {
+export const LoadingOverlay = ({ visible }: { visible: boolean }) => {
   const { colors } = useTheme();
   if (!visible) return null;
 
@@ -18,7 +18,7 @@ export function LoadingOverlay({ visible }: { visible: boolean }) {
       </View>
     </Modal>
   );
-}
+};
 
 const styles = StyleSheet.create({
   cover: {

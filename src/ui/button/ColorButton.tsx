@@ -10,7 +10,7 @@ type Props = {
   onPress: () => void;
 };
 
-export function ColorButton({ color, label, selected = false, onPress }: Props) {
+export const ColorButton = ({ color, label, selected = false, onPress }: Props) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -31,9 +31,9 @@ export function ColorButton({ color, label, selected = false, onPress }: Props) 
       />
     </Pressable>
   );
-}
+};
 
-function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => {
   return StyleSheet.create({
     item: {
       flex: 1,
@@ -58,4 +58,4 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       elevation: 3,
     },
   });
-}
+};

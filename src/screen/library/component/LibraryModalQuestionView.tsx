@@ -1,12 +1,49 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 
 import { IconButton, useTheme } from '@/ui';
-import { CloseIcon, PauseIcon, PlayIcon } from '@/ui/icon';
+import { CloseIcon, PauseIcon, PlayIcon, SpeakerIcon } from '@/ui/icon';
 
-export function QuestionAudioModal({
+import { LibraryIconButton } from './LibraryLayoutForm';
+
+export const LibraryModalQuestionViewButton = ({
+  questionIndex,
+  audioUrl,
+  content,
+  hint,
+}: {
+  questionIndex: number;
+  audioUrl: string | null;
+  content: string;
+  hint: string;
+}) => {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const [open, setOpen] = useState(false);
+
+  if (!audioUrl) return null;
+
+  return (
+    <>
+      <LibraryIconButton label={t('library.playAudio')} onPress={() => setOpen(true)}>
+        <SpeakerIcon color={colors.primary} />
+      </LibraryIconButton>
+      {open ? (
+        <LibraryModalQuestionView
+          questionIndex={questionIndex}
+          audioUrl={audioUrl}
+          content={content}
+          hint={hint}
+          onClose={() => setOpen(false)}
+        />
+      ) : null}
+    </>
+  );
+};
+
+const LibraryModalQuestionView = ({
   questionIndex,
   audioUrl,
   content,
@@ -18,7 +55,7 @@ export function QuestionAudioModal({
   content: string;
   hint: string;
   onClose: () => void;
-}) {
+}) => {
   const { t } = useTranslation();
   const { colors, mode } = useTheme();
   const styles = useMemo(() => createStyles(colors, mode), [colors, mode]);
@@ -43,15 +80,15 @@ export function QuestionAudioModal({
       </View>
     </Modal>
   );
-}
+};
 
-function AudioPlayer({
+const AudioPlayer = ({
   audioUrl,
   styles,
 }: {
   audioUrl: string;
   styles: ReturnType<typeof createStyles>;
-}) {
+}) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const player = useAudioPlayer(
@@ -61,9 +98,16 @@ function AudioPlayer({
   const status = useAudioPlayerStatus(player);
   const playing = status.playing && !status.didJustFinish;
 
+  useLayoutEffect(() => () => player.pause(), [player]);
+
   useEffect(() => {
-    void setAudioModeAsync({ playsInSilentMode: true }).then(() => player.play());
-    return () => player.pause();
+    let cancelled = false;
+    void setAudioModeAsync({ playsInSilentMode: true }).then(() => {
+      if (!cancelled) player.play();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [player]);
 
   const onTogglePlay = () => {
@@ -94,9 +138,9 @@ function AudioPlayer({
       </Text>
     </View>
   );
-}
+};
 
-function AudioBars({ playing, color }: { playing: boolean; color: string }) {
+const AudioBars = ({ playing, color }: { playing: boolean; color: string }) => {
   const bars = useMemo(
     () => BAR_SCALES.map((scale) => new Animated.Value(scale)),
     [],
@@ -140,7 +184,7 @@ function AudioBars({ playing, color }: { playing: boolean; color: string }) {
       ))}
     </View>
   );
-}
+};
 
 const BAR_HEIGHTS = [8, 12, 16, 20, 24, 20, 16, 12, 8];
 const BAR_SCALES = BAR_HEIGHTS.map((height) => height / 24);
@@ -157,15 +201,15 @@ const barStyles = StyleSheet.create({
   bar: { width: 4, height: 24, borderRadius: 2 },
 });
 
-function formatTime(seconds: number) {
+const formatTime = (seconds: number) => {
   const total = Math.max(0, Math.floor(seconds));
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
-}
+};
 
-function createStyles(
+const createStyles = (
   colors: ReturnType<typeof useTheme>['colors'],
   mode: ReturnType<typeof useTheme>['mode'],
-) {
+) => {
   const surface = mode === 'dark' ? '#1A222C' : '#FFFFFF';
   return StyleSheet.create({
     overlay: {
@@ -195,4 +239,4 @@ function createStyles(
     content: { fontSize: 16, fontWeight: '600', color: colors.text, lineHeight: 22 },
     hint: { fontSize: 14, color: colors.textMuted, lineHeight: 20 },
   });
-}
+};

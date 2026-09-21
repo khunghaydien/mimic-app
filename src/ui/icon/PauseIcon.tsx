@@ -2,7 +2,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import type { IconProps } from './types';
 
-export function PauseIcon({ color }: IconProps) {
+export const PauseIcon = ({ color }: IconProps) => {
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
       <Path
@@ -11,4 +11,4 @@ export function PauseIcon({ color }: IconProps) {
       />
     </Svg>
   );
-}
+};
