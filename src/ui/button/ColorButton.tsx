@@ -51,7 +51,6 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => {
     },
     swatchSelected: {
       borderColor: colors.onPrimary,
-      shadowColor: '#000',
       shadowOpacity: 0.25,
       shadowRadius: 4,
       shadowOffset: { width: 0, height: 1 },

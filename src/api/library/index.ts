@@ -1,7 +1,6 @@
 export {
   canManageLibrary,
   useCreateLibrary,
-  useCreateQuestion,
   useDeleteLibrary,
   useDeleteQuestion,
   useGenerateQuestion,
@@ -10,5 +9,6 @@ export {
   useUpdateLibrary,
   useUpdateQuestion,
   type Library,
+  type LibraryListItem,
   type Question,
 } from './service';

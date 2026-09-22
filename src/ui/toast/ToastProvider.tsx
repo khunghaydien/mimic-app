@@ -54,7 +54,7 @@ const ToastHost = () => {
         },
       ]}
     >
-      <Text style={styles.text}>{state.message}</Text>
+      <Text style={[styles.text, { color: colors.onPrimary }]}>{state.message}</Text>
     </Pressable>
   );
 };
@@ -71,7 +71,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   text: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',

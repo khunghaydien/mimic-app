@@ -19,8 +19,8 @@ export const ConfirmModal = ({
   onClose: () => void;
   onConfirm: () => void;
 }) => {
-  const { colors, mode } = useTheme();
-  const styles = useMemo(() => createStyles(colors, mode), [colors, mode]);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
@@ -44,34 +44,25 @@ export const ConfirmModal = ({
   );
 };
 
-const createStyles = (
-  colors: ReturnType<typeof useTheme>['colors'],
-  mode: ReturnType<typeof useTheme>['mode'],
-) => {
-  const surface = mode === 'dark' ? '#1A222C' : '#FFFFFF';
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => {
   return StyleSheet.create({
     overlay: {
       flex: 1,
       justifyContent: 'center',
       paddingHorizontal: 24,
-      backgroundColor: 'rgba(0,0,0,0.45)',
+      backgroundColor: colors.overlay,
     },
-    sheet: { backgroundColor: surface, borderRadius: 12, padding: 16, gap: 12 },
+    sheet: { backgroundColor: colors.surface, borderRadius: 12, padding: 16, gap: 12 },
     title: { fontSize: 18, fontWeight: '700', color: colors.text },
     message: { fontSize: 14, color: colors.textMuted, lineHeight: 20 },
     actions: { flexDirection: 'row', gap: 8 },
     cancel: {
       flex: 1,
       minWidth: undefined,
-      backgroundColor: surface,
+      backgroundColor: colors.surface,
       borderColor: colors.border,
     },
     cancelLabel: { color: colors.text },
-    confirm: {
-      flex: 1,
-      minWidth: undefined,
-      backgroundColor: colors.danger,
-      borderColor: colors.danger,
-    },
+    confirm: { flex: 1, minWidth: undefined },
   });
 };

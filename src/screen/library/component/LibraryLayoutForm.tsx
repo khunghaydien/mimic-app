@@ -87,13 +87,13 @@ export const LibraryIconButton = ({
   onPress: () => void;
   children: ReactNode;
 }) => {
-  const { mode } = useTheme();
+  const { colors } = useTheme();
   return (
     <IconButton
       label={label}
       onPress={onPress}
       hitSlop={6}
-      style={mode === 'dark' ? iconButtonStyles.dark : iconButtonStyles.light}
+      style={[iconButtonStyles.base, { backgroundColor: colors.border }]}
     >
       {children}
     </IconButton>
@@ -490,21 +490,12 @@ const createTitleStyles = (colors: ReturnType<typeof useTheme>['colors']) => {
 };
 
 const iconButtonStyles = StyleSheet.create({
-  light: {
+  base: {
     width: 32,
     height: 32,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(220, 223, 228, 0.68)',
-  },
-  dark: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(36, 48, 64, 0.5)',
   },
 });
 

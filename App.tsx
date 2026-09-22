@@ -11,6 +11,8 @@ import {
   AuthScreen,
   HomeScreen,
   LibraryScreen,
+  popLibraryScreen,
+  resetLibraryScreen,
   SettingScreen,
   type AuthScreenState,
   type LibraryScreenState,
@@ -77,35 +79,39 @@ const AppShell = () => {
   const isLibraryDetailOpen =
     activeTab === 'library' && libraryScreen.status !== 'list';
 
-  const closeLibraryDetail = () => {
-    setLibraryScreen((current) =>
-      current.status === 'list' ? current : { status: 'list' },
-    );
-  };
+  const leaveLibrary = () => setLibraryScreen(resetLibraryScreen());
 
   const goHome = () => {
     setActiveTab('home');
-    closeLibraryDetail();
+    leaveLibrary();
   };
+
+  const libraryTitle = {
+    list: t('library.title'),
+    create: t('library.detailTitle'),
+    view: t('library.detailTitle'),
+    update: t('library.detailTitle'),
+    play: t('library.playTitle'),
+  }[libraryScreen.status];
+
+  const headerTitle = {
+    home: t('app.name'),
+    library: libraryTitle,
+    setting: t('setting.title'),
+  }[activeTab];
 
   return (
     <>
       <AppHeader
-        title={
-          isLibraryDetailOpen
-            ? t('library.detailTitle')
-            : activeTab === 'home'
-              ? t('app.name')
-              : t(`${activeTab}.title`)
-        }
+        title={headerTitle}
         onOpenSetting={() => {
           setActiveTab('setting');
-          closeLibraryDetail();
+          leaveLibrary();
         }}
         onHome={activeTab !== 'home' && !isLibraryDetailOpen ? goHome : undefined}
         onBack={
           isLibraryDetailOpen
-            ? closeLibraryDetail
+            ? () => setLibraryScreen(popLibraryScreen)
             : undefined
         }
       />
@@ -128,7 +134,7 @@ const AppShell = () => {
         activeTab={activeTab}
         onSelect={(tabId) => {
           setActiveTab(tabId);
-          if (tabId !== 'library') closeLibraryDetail();
+          if (tabId !== 'library') leaveLibrary();
         }}
       />
     </>

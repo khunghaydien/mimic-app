@@ -13,7 +13,7 @@ export const LoadingOverlay = ({ visible }: { visible: boolean }) => {
       animationType="fade"
       statusBarTranslucent
     >
-      <View style={styles.cover}>
+      <View style={[styles.cover, { backgroundColor: colors.overlay }]}>
         <ActivityIndicator color={colors.primary} size="large" />
       </View>
     </Modal>
@@ -25,6 +25,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
   },
 });

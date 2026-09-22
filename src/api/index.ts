@@ -1,9 +1,8 @@
 export { QueryProvider } from './QueryProvider';
-export { AuthProvider, useAuth, useLogin, useRegister } from './auth';
+export { AuthProvider, useAuth, useLogin, useMe, useRegister } from './auth';
 export {
   canManageLibrary,
   useCreateLibrary,
-  useCreateQuestion,
   useDeleteLibrary,
   useDeleteQuestion,
   useGenerateQuestion,
@@ -12,4 +11,10 @@ export {
   useUpdateLibrary,
   useUpdateQuestion,
 } from './library';
-export type { Library, Question } from './library';
+export {
+  useCreateAnswer,
+  useCreatePractice,
+  usePractice,
+} from './practice';
+export type { Library, LibraryListItem, Question } from './library';
+export type { Practice, PracticeAnswer } from './practice';

@@ -1854,6 +1854,11 @@ expo-constants@~57.0.17:
   dependencies:
     "@expo/env" "~2.4.3"
 
+expo-document-picker@~57.0.2:
+  version "57.0.2"
+  resolved "https://registry.yarnpkg.com/expo-document-picker/-/expo-document-picker-57.0.2.tgz#d972b544ad121ef07c4cc6ee62d8b1e95c110d86"
+  integrity sha512-vVBbBNg0piMJUIxjB+DR6JaZZpcSl90ZUoywLA/EgNHTfRkZW+9axP97UxM2a0Zm0W6WfH3cLzzGAEfP9OKGwg==
+
 expo-file-system@~57.0.6:
   version "57.0.6"
   resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-57.0.6.tgz#83cb02ad19dff1b23c8e48d5435e04c51791f2a9"

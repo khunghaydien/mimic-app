@@ -2,7 +2,7 @@ import { memo, useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { useDeleteLibrary, type Library } from '@/api';
+import { useDeleteLibrary, type LibraryListItem } from '@/api';
 import { ConfirmModal, useTheme } from '@/ui';
 import { DeleteIcon, EditIcon, EyeIcon } from '@/ui/icon';
 
@@ -12,11 +12,11 @@ const LibraryLayoutCard = memo(({
   item,
   actions,
 }: {
-  item: Library;
+  item: LibraryListItem;
   actions: ReactNode;
 }) => {
-  const { colors, mode } = useTheme();
-  const styles = useMemo(() => createStyles(colors, mode), [colors, mode]);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const fields = useMemo(
     () =>
       Object.entries(item).filter(
@@ -44,10 +44,12 @@ const LibraryLayoutCard = memo(({
 
 export const LibraryLayoutCardManage = memo(({
   item,
+  onView,
   onUpdate,
 }: {
-  item: Library;
-  onUpdate: (item: Library) => void;
+  item: LibraryListItem;
+  onView: (item: LibraryListItem) => void;
+  onUpdate: (item: LibraryListItem) => void;
 }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -57,6 +59,9 @@ export const LibraryLayoutCardManage = memo(({
       item={item}
       actions={
         <>
+          <LibraryIconButton label={t('library.view')} onPress={() => onView(item)}>
+            <EyeIcon color={colors.text} />
+          </LibraryIconButton>
           <LibraryIconButton label={t('library.edit')} onPress={() => onUpdate(item)}>
             <EditIcon color={colors.text} />
           </LibraryIconButton>
@@ -71,8 +76,8 @@ export const LibraryLayoutCardView = memo(({
   item,
   onView,
 }: {
-  item: Library;
-  onView: (item: Library) => void;
+  item: LibraryListItem;
+  onView: (item: LibraryListItem) => void;
 }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -114,14 +119,10 @@ const DeleteLibraryButton = ({ libraryId, title }: { libraryId: string; title: s
   );
 };
 
-const createStyles = (
-  colors: ReturnType<typeof useTheme>['colors'],
-  mode: ReturnType<typeof useTheme>['mode'],
-) => {
-  const surface = mode === 'dark' ? '#1A222C' : '#FFFFFF';
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => {
   return StyleSheet.create({
     card: {
-      backgroundColor: surface,
+      backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.border,
       borderRadius: 12,

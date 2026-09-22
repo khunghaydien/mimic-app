@@ -21,7 +21,6 @@ import {
   LibraryQuestionList,
   LibraryQuestionRow,
 } from './LibraryLayoutForm';
-import { LibraryModalQuestionViewButton } from './LibraryModalQuestionView';
 
 type Draft = {
   key: string;
@@ -133,7 +132,6 @@ const UpdateLibraryForm = ({ library }: { library: Library }) => {
             <UpdateQuestion
               key={question.key}
               index={index}
-              libraryId={library.id}
               initial={question}
               registerDraft={registerDraft}
               onRemoved={removeQuestion}
@@ -147,13 +145,11 @@ const UpdateLibraryForm = ({ library }: { library: Library }) => {
 
 const UpdateQuestion = memo(({
   index,
-  libraryId,
   initial,
   registerDraft,
   onRemoved,
 }: {
   index: number;
-  libraryId: string;
   initial: Draft;
   registerDraft: (key: string, getDraft: () => Draft) => () => void;
   onRemoved: (key: string) => void;
@@ -189,7 +185,6 @@ const UpdateQuestion = memo(({
         <>
           {dirty ? (
             <SaveQuestion
-              libraryId={libraryId}
               questionId={questionId}
               content={content}
               hint={hint}
@@ -203,14 +198,7 @@ const UpdateQuestion = memo(({
               }}
             />
           ) : null}
-          <LibraryModalQuestionViewButton
-            questionIndex={index + 1}
-            audioUrl={audioUrl}
-            content={content}
-            hint={hint}
-          />
           <DeleteQuestion
-            libraryId={libraryId}
             questionId={questionId}
             questionKey={initial.key}
             onDeleted={onRemoved}
@@ -222,13 +210,11 @@ const UpdateQuestion = memo(({
 });
 
 const SaveQuestion = ({
-  libraryId,
   questionId,
   content,
   hint,
   onSaved,
 }: {
-  libraryId: string;
   questionId: string;
   content: string;
   hint: string;
@@ -245,7 +231,6 @@ const SaveQuestion = ({
       return;
     }
     const question = await save.mutateAsync({
-      libraryId,
       questionId,
       content: trimmedContent,
       hint: hint.trim(),
@@ -261,12 +246,10 @@ const SaveQuestion = ({
 };
 
 const DeleteQuestion = ({
-  libraryId,
   questionId,
   questionKey,
   onDeleted,
 }: {
-  libraryId: string;
   questionId: string;
   questionKey: string;
   onDeleted: (key: string) => void;
@@ -289,9 +272,7 @@ const DeleteQuestion = ({
           confirmLabel={t('library.delete')}
           onClose={() => setOpen(false)}
           onConfirm={() =>
-            remove.mutate(
-              { libraryId, questionId },
-              {
+            remove.mutate(questionId, {
                 onSuccess: () => {
                   setOpen(false);
                   onDeleted(questionKey);

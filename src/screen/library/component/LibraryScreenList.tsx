@@ -9,11 +9,11 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { canManageLibrary, useAuth, useLibraryList, type Library } from '@/api';
+import { canManageLibrary, useAuth, useLibraryList, type LibraryListItem } from '@/api';
 import { AppButton, AppScreen, useTheme } from '@/ui';
 
 import { LibraryLayoutCardManage, LibraryLayoutCardView } from './LibraryLayoutCard';
-import type { LibraryScreenState } from '../LibraryScreen';
+import type { LibraryScreenState } from '../libraryScreenNav';
 
 export const LibraryScreenList = memo(({
   visible,
@@ -24,8 +24,8 @@ export const LibraryScreenList = memo(({
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { colors, mode } = useTheme();
-  const styles = useMemo(() => createStyles(colors, mode), [colors, mode]);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [searchText, setSearchText] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const list = useLibraryList(appliedSearch || undefined, visible);
@@ -35,17 +35,22 @@ export const LibraryScreenList = memo(({
   );
 
   const onUpdate = useCallback(
-    (item: Library) => onScreenChange({ status: 'update', libraryId: item.id }),
+    (item: LibraryListItem) =>
+      onScreenChange({ status: 'update', libraryId: item.id, from: 'list' }),
     [onScreenChange],
   );
   const onView = useCallback(
-    (item: Library) => onScreenChange({ status: 'view', libraryId: item.id }),
+    (item: LibraryListItem) => onScreenChange({ status: 'view', libraryId: item.id }),
+    [onScreenChange],
+  );
+  const onCreate = useCallback(
+    () => onScreenChange({ status: 'create' }),
     [onScreenChange],
   );
   const renderItem = useCallback(
-    ({ item }: { item: Library }) =>
+    ({ item }: { item: LibraryListItem }) =>
       canManageLibrary(item.creator, user!) ? (
-        <LibraryLayoutCardManage item={item} onUpdate={onUpdate} />
+        <LibraryLayoutCardManage item={item} onView={onView} onUpdate={onUpdate} />
       ) : (
         <LibraryLayoutCardView item={item} onView={onView} />
       ),
@@ -99,7 +104,7 @@ export const LibraryScreenList = memo(({
       <View style={styles.createBar}>
         <AppButton
           label={t('library.create')}
-          onPress={() => onScreenChange({ status: 'create' })}
+          onPress={onCreate}
           style={styles.create}
         />
       </View>
@@ -107,11 +112,7 @@ export const LibraryScreenList = memo(({
   );
 });
 
-const createStyles = (
-  colors: ReturnType<typeof useTheme>['colors'],
-  mode: ReturnType<typeof useTheme>['mode'],
-) => {
-  const surface = mode === 'dark' ? '#1A222C' : '#FFFFFF';
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => {
   return StyleSheet.create({
     screen: { paddingBottom: 0 },
     search: {
@@ -119,7 +120,7 @@ const createStyles = (
       marginBottom: 12,
       borderWidth: 1,
       borderColor: colors.border,
-      backgroundColor: surface,
+      backgroundColor: colors.surface,
       borderRadius: 10,
       paddingHorizontal: 14,
       paddingVertical: 12,

@@ -8,10 +8,10 @@ import {
 
 import { api } from '../QueryProvider';
 
-const LIBRARY_PATH = '/libraries';
+const LIBRARY_PATH = '/library';
+const QUESTION_PATH = '/question';
 const libraryPath = (libraryId: string) => `${LIBRARY_PATH}/${libraryId}`;
-const questionPath = (libraryId: string, questionId: string) =>
-  `${libraryPath(libraryId)}/questions/${questionId}`;
+const questionPath = (questionId: string) => `${QUESTION_PATH}/${questionId}`;
 
 export type Question = {
   id: string;
@@ -22,18 +22,26 @@ export type Question = {
   updatedAt: string;
 };
 
-export type Library = {
+export type LibraryListItem = {
   id: string;
   title: string;
   creator: string;
   questionCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Library = {
+  id: string;
+  title: string;
+  creator: string;
   questions: Question[];
   createdAt: string;
   updatedAt: string;
 };
 
 type LibraryPage = {
-  items: Library[];
+  items: LibraryListItem[];
   meta: { page: number; limit: number; total: number };
 };
 
@@ -76,7 +84,7 @@ export const useLibrary = (libraryId: string) =>
 export const useCreateLibrary = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: { title: string; questions: QuestionBody[] }) =>
+    mutationFn: (body: { title: string; questions?: QuestionBody[] }) =>
       api.request<Library>(LIBRARY_PATH, 'POST', body),
     onSuccess: () => invalidateLibrary(queryClient),
   });
@@ -92,7 +100,7 @@ export const useUpdateLibrary = () => {
     }: {
       id: string;
       title: string;
-      questions: (QuestionBody & { id: string })[];
+      questions: (QuestionBody & { id?: string })[];
     }) => api.request<Library>(libraryPath(id), 'PUT', { title, questions }),
     onSuccess: () => invalidateLibrary(queryClient),
   });
@@ -110,42 +118,23 @@ export const useDeleteLibrary = () => {
 export const useGenerateQuestion = () =>
   useMutation({
     mutationFn: (title: string) =>
-      api.request<Record<string, QuestionBody>>(`${LIBRARY_PATH}/generate`, 'POST', {
+      api.request<Record<string, QuestionBody>>(`${QUESTION_PATH}/generate`, 'POST', {
         title,
       }),
   });
-
-export const useCreateQuestion = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      libraryId,
-      content,
-      hint,
-    }: {
-      libraryId: string;
-      content: string;
-      hint: string;
-    }) => api.request<Question>(`${libraryPath(libraryId)}/questions`, 'POST', { content, hint }),
-    onSuccess: () => invalidateLibrary(queryClient),
-  });
-};
 
 export const useUpdateQuestion = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
-      libraryId,
       questionId,
       content,
       hint,
     }: {
-      libraryId: string;
       questionId: string;
       content: string;
       hint: string;
-    }) =>
-      api.request<Question>(questionPath(libraryId, questionId), 'PATCH', { content, hint }),
+    }) => api.request<Question>(questionPath(questionId), 'PATCH', { content, hint }),
     onSuccess: () => invalidateLibrary(queryClient),
   });
 };
@@ -153,8 +142,8 @@ export const useUpdateQuestion = () => {
 export const useDeleteQuestion = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ libraryId, questionId }: { libraryId: string; questionId: string }) =>
-      api.request<{ id: string }>(questionPath(libraryId, questionId), 'DELETE'),
+    mutationFn: (questionId: string) =>
+      api.request<{ id: string }>(questionPath(questionId), 'DELETE'),
     onSuccess: () => invalidateLibrary(queryClient),
   });
 };

@@ -19,6 +19,8 @@ export const PRIMARY_PRESETS: {
 
 const light = {
   background: '#F5F6F8',
+  surface: '#FFFFFF',
+  overlay: '#00000073',
   text: '#123047',
   textMuted: '#3A5163',
   border: '#E5E5E5',
@@ -30,6 +32,8 @@ const light = {
 
 const dark = {
   background: '#0F1419',
+  surface: '#1A222C',
+  overlay: '#00000073',
   text: '#F4F7FA',
   textMuted: '#9AA8B5',
   border: '#2A3441',

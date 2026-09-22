@@ -208,7 +208,6 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => {
       borderColor: colors.border,
       backgroundColor: colors.background,
       paddingVertical: 8,
-      shadowColor: '#000',
       shadowOpacity: 0.15,
       shadowRadius: 12,
       shadowOffset: { width: 0, height: 4 },

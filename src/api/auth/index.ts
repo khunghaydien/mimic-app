@@ -1,2 +1,2 @@
 export { AuthProvider, useAuth } from './AuthProvider';
-export { useLogin, useRegister } from './service';
+export { useLogin, useMe, useRegister } from './service';

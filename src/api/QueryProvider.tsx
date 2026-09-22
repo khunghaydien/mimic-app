@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { File, UploadType } from 'expo-file-system';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Platform } from 'react-native';
 
@@ -7,6 +8,12 @@ import { LoadingOverlay, toast } from '@/ui';
 import { AUTH_PATHS } from './auth/service';
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+const PUBLIC_AUTH_PATHS = new Set([
+  AUTH_PATHS.LOGIN,
+  AUTH_PATHS.REGISTER,
+  AUTH_PATHS.REFRESH,
+]);
 
 const apiBaseUrl = () => {
   const url = process.env.EXPO_PUBLIC_BASE_URL ?? '';
@@ -22,8 +29,17 @@ type ApiResponse<T> =
   | { success: true; data: T; message: string }
   | { success: false; data: null; message: string[]; statusCode?: number };
 
+export type AuthUser = {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type AuthSession = {
-  user: { id: string; name: string; email: string; avatarUrl: string | null };
+  user: AuthUser;
   accessToken: string;
   refreshToken: string;
 };
@@ -60,10 +76,40 @@ class Api {
     method: Method = 'GET',
     body?: unknown,
   ): Promise<T> {
+    return this.run(path, method, () => this.send<T>(path, method, body));
+  }
+
+  async upload<T>(
+    path: string,
+    uri: string,
+    options: {
+      fieldName: string;
+      name?: string;
+      mimeType?: string;
+      parameters?: Record<string, string>;
+    },
+  ): Promise<T> {
+    if (Platform.OS === 'web') {
+      const body = new FormData();
+      const blob = await fetch(uri).then((response) => response.blob());
+      body.append(options.fieldName, blob, options.name ?? 'file');
+      Object.entries(options.parameters ?? {}).forEach(([key, value]) => {
+        body.append(key, value);
+      });
+      return this.request<T>(path, 'POST', body);
+    }
+    return this.run(path, 'POST', () => this.sendFile<T>(path, uri, options));
+  }
+
+  private async run<T>(
+    path: string,
+    method: Method,
+    sendOnce: () => Promise<ApiResponse<T>>,
+  ): Promise<T> {
     const showLoadingOverlay = method !== 'GET' && path !== AUTH_PATHS.REFRESH;
     if (showLoadingOverlay) this.changePendingMutationCount(1);
     try {
-      let payload = await this.send<T>(path, method, body);
+      let payload = await sendOnce();
 
       if (
         !payload.success &&
@@ -77,7 +123,7 @@ class Api {
         if (refreshPayload.success) {
           this.setAuth(refreshPayload.data);
           this.onAuth?.(refreshPayload.data);
-          payload = await this.send<T>(path, method, body);
+          payload = await sendOnce();
         } else {
           this.setAuth(null);
           this.onAuth?.(null);
@@ -105,29 +151,86 @@ class Api {
     }
   }
 
+  private headers(path: string, body: unknown) {
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (body !== undefined && !isFormData(body)) {
+      headers['Content-Type'] = 'application/json';
+    }
+    if (!PUBLIC_AUTH_PATHS.has(path)) {
+      headers.Date = new Date().toISOString();
+      if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
+    }
+    return headers;
+  }
+
   private async send<T>(
     path: string,
     method: Method,
     body?: unknown,
   ): Promise<ApiResponse<T>> {
-    const headers: Record<string, string> = { Accept: 'application/json' };
-    if (body !== undefined) headers['Content-Type'] = 'application/json';
-    if (this.accessToken && path !== AUTH_PATHS.REFRESH) {
-      headers.Authorization = `Bearer ${this.accessToken}`;
-    }
+    const headers = this.headers(path, body);
+    const payload =
+      body === undefined
+        ? undefined
+        : isFormData(body)
+          ? body
+          : JSON.stringify(body);
 
     try {
-      if (__DEV__) console.log('[api] request', method, path, body ?? '');
+      if (__DEV__) console.log('[api] request', method, path, isFormData(body) ? '[form-data]' : (body ?? ''));
       const response = await fetch(`${BASE_URL}${path}`, {
         method,
         headers,
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body: payload,
       });
-      const payload = (await response.json()) as ApiResponse<T>;
-      if (__DEV__) console.log('[api] response', response.status, path, payload);
-      return payload;
+      const data = (await response.json()) as ApiResponse<T>;
+      if (__DEV__) console.log('[api] response', response.status, path, data);
+      return data;
     } catch (error) {
       if (__DEV__) console.log('[api] error', method, path, error);
+      toast.show('error', 'Network request failed');
+      throw new Error('Network request failed');
+    }
+  }
+
+  private async sendFile<T>(
+    path: string,
+    uri: string,
+    options: {
+      fieldName: string;
+      mimeType?: string;
+      parameters?: Record<string, string>;
+    },
+  ): Promise<ApiResponse<T>> {
+    const file = new File(uri);
+    console.log('[api] request POST', path, '[file]', file.uri, options.parameters);
+    try {
+      const result = await file.upload(`${BASE_URL}${path}`, {
+        httpMethod: 'POST',
+        uploadType: UploadType.MULTIPART,
+        fieldName: options.fieldName,
+        mimeType: options.mimeType,
+        headers: this.headers(path, undefined),
+        parameters: options.parameters,
+        sessionType: 'foreground',
+      });
+      console.log('[api] response', result.status, path, result.body);
+      try {
+        const data = JSON.parse(result.body) as ApiResponse<T>;
+        if (!data.success && data.statusCode == null) {
+          return { ...data, statusCode: result.status };
+        }
+        return data;
+      } catch {
+        return {
+          success: false,
+          data: null,
+          message: [result.body || 'Upload failed'],
+          statusCode: result.status,
+        };
+      }
+    } catch (error) {
+      console.log('[api] error POST', path, error);
       toast.show('error', 'Network request failed');
       throw new Error('Network request failed');
     }
@@ -135,6 +238,13 @@ class Api {
 }
 
 export const api = new Api();
+
+const isFormData = (body: unknown): body is FormData => {
+  if (body == null || typeof body !== 'object') return false;
+  if (typeof FormData !== 'undefined' && body instanceof FormData) return true;
+  return Array.isArray((body as { _parts?: unknown })._parts);
+};
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

@@ -9,7 +9,10 @@
     "scheme": "mimicapp",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.phunghuudat.mimicapp"
+      "bundleIdentifier": "com.phunghuudat.mimicapp",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to record your answers."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -20,14 +23,18 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.phunghuudat.mimicapp",
-      "usesCleartextTraffic": true
+      "usesCleartextTraffic": true,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "plugins": [
       [
         "expo-audio",
         {
-          "microphonePermission": false,
-          "recordAudioAndroid": false,
+          "microphonePermission": "Allow $(PRODUCT_NAME) to record your answers.",
+          "recordAudioAndroid": true,
           "enableBackgroundPlayback": false
         }
       ]
