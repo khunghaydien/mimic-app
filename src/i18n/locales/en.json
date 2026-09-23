@@ -5,6 +5,7 @@
   "tabs": {
     "home": "Home",
     "library": "Library",
+    "practice": "Practice",
     "setting": "Setting"
   },
   "library": {
@@ -29,7 +30,24 @@
     "pickAudio": "Choose file",
     "pickedAudio": "Selected: {{name}}",
     "submit": "Submit",
+    "grade": "Grade",
+    "gradeDone": "Done",
+    "gradeReady": "All answers submitted. Grade now.",
+    "gradeCaption": "Transcript",
+    "gradeRelevance": "Relevance",
+    "gradeVocabulary": "Vocabulary",
+    "gradeGrammar": "Grammar",
+    "gradeCompleteness": "Completeness",
+    "gradeComment": "Comment",
+    "gradeStrengths": "Strengths",
+    "gradeImprovements": "Improvements",
+    "gradeErrors": "Errors",
+    "gradeOriginal": "Original",
+    "gradeCorrection": "Correction",
+    "gradeExplanation": "Explanation",
+    "gradeMissing": "Missing",
     "generate": "Generate questions",
+    "addQuestion": "Add question",
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",
@@ -41,6 +59,14 @@
     "cancel": "Cancel",
     "errorTitle": "Title cannot be empty",
     "errorQuestion": "Question cannot be empty"
+  },
+  "practice": {
+    "title": "Practice",
+    "playTitle": "Practice",
+    "resultTitle": "Result",
+    "empty": "No practice sessions yet",
+    "fieldLibrary": "Library",
+    "score": "Score"
   },
   "home": {
     "hello": "Hello, {{name}}"

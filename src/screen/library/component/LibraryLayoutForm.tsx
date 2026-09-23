@@ -1,6 +1,7 @@
 import {
   createContext,
   createElement,
+  forwardRef,
   useContext,
   useLayoutEffect,
   useMemo,
@@ -309,19 +310,24 @@ const useLibraryQuestionDrag = () => {
   return drag;
 };
 
-export const LibraryQuestionList = ({ children }: { children: ReactNode }) => {
+export const LibraryQuestionList = forwardRef<
+  ScrollView,
+  { children: ReactNode; onContentSizeChange?: () => void }
+>(({ children, onContentSizeChange }, ref) => {
   const { dragging } = useLibraryQuestionDrag();
   return (
     <ScrollView
+      ref={ref}
       style={styles.list}
       contentContainerStyle={styles.listContent}
       keyboardShouldPersistTaps="handled"
       scrollEnabled={!dragging}
+      onContentSizeChange={onContentSizeChange}
     >
       {children}
     </ScrollView>
   );
-};
+});
 
 export const LibraryQuestionRow = ({
   index,

@@ -11,11 +11,15 @@ import {
   AuthScreen,
   HomeScreen,
   LibraryScreen,
+  PracticeScreen,
   popLibraryScreen,
+  popPracticeScreen,
   resetLibraryScreen,
+  resetPracticeScreen,
   SettingScreen,
   type AuthScreenState,
   type LibraryScreenState,
+  type PracticeScreenState,
 } from '@/screen';
 import {
   AppHeader,
@@ -75,15 +79,22 @@ const AppShell = () => {
   const [libraryScreen, setLibraryScreen] = useState<LibraryScreenState>({
     status: 'list',
   });
+  const [practiceScreen, setPracticeScreen] = useState<PracticeScreenState>({
+    status: 'list',
+  });
 
   const isLibraryDetailOpen =
     activeTab === 'library' && libraryScreen.status !== 'list';
+  const isPracticeDetailOpen =
+    activeTab === 'practice' && practiceScreen.status !== 'list';
 
   const leaveLibrary = () => setLibraryScreen(resetLibraryScreen());
+  const leavePractice = () => setPracticeScreen(resetPracticeScreen());
 
   const goHome = () => {
     setActiveTab('home');
     leaveLibrary();
+    leavePractice();
   };
 
   const libraryTitle = {
@@ -91,12 +102,18 @@ const AppShell = () => {
     create: t('library.detailTitle'),
     view: t('library.detailTitle'),
     update: t('library.detailTitle'),
-    play: t('library.playTitle'),
   }[libraryScreen.status];
+
+  const practiceTitle = {
+    list: t('practice.title'),
+    play: t('practice.playTitle'),
+    result: t('practice.resultTitle'),
+  }[practiceScreen.status];
 
   const headerTitle = {
     home: t('app.name'),
     library: libraryTitle,
+    practice: practiceTitle,
     setting: t('setting.title'),
   }[activeTab];
 
@@ -107,12 +124,19 @@ const AppShell = () => {
         onOpenSetting={() => {
           setActiveTab('setting');
           leaveLibrary();
+          leavePractice();
         }}
-        onHome={activeTab !== 'home' && !isLibraryDetailOpen ? goHome : undefined}
+        onHome={
+          activeTab !== 'home' && !isLibraryDetailOpen && !isPracticeDetailOpen
+            ? goHome
+            : undefined
+        }
         onBack={
           isLibraryDetailOpen
             ? () => setLibraryScreen(popLibraryScreen)
-            : undefined
+            : isPracticeDetailOpen
+              ? () => setPracticeScreen(popPracticeScreen())
+              : undefined
         }
       />
       <View style={styles.fill}>
@@ -124,6 +148,17 @@ const AppShell = () => {
             visible={activeTab === 'library'}
             screen={libraryScreen}
             onScreenChange={setLibraryScreen}
+            onPlay={(libraryId) => {
+              setPracticeScreen({ status: 'play', libraryId });
+              setActiveTab('practice');
+            }}
+          />
+        </KeepAliveTab>
+        <KeepAliveTab visible={activeTab === 'practice'} style={styles}>
+          <PracticeScreen
+            visible={activeTab === 'practice'}
+            screen={practiceScreen}
+            onScreenChange={setPracticeScreen}
           />
         </KeepAliveTab>
         <KeepAliveTab visible={activeTab === 'setting'} style={styles}>
@@ -135,6 +170,11 @@ const AppShell = () => {
         onSelect={(tabId) => {
           setActiveTab(tabId);
           if (tabId !== 'library') leaveLibrary();
+          if (tabId === 'practice') {
+            setPracticeScreen({ status: 'list' });
+            return;
+          }
+          leavePractice();
         }}
       />
     </>

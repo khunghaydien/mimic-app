@@ -8,11 +8,11 @@ import {
 } from 'expo-audio';
 import { getDocumentAsync } from 'expo-document-picker';
 
-import { useCreateAnswer, useCreatePractice, useLibrary } from '@/api';
+import { useCreateAnswer, useCreatePractice, useGradePractice, useLibrary } from '@/api';
 import { AppButton, AppScreen, IconButton, useTheme } from '@/ui';
 import { PauseIcon, PlayIcon } from '@/ui/icon';
 
-import { LibraryIconButton } from './LibraryLayoutForm';
+type PlayPhase = 'answer' | 'grade';
 
 type AnswerFile = {
   uri: string;
@@ -20,22 +20,12 @@ type AnswerFile = {
   type?: string;
 };
 
-export const LibraryScreenPlayButton = ({ onPress }: { onPress: () => void }) => {
-  const { t } = useTranslation();
-  const { colors } = useTheme();
-  return (
-    <LibraryIconButton label={t('library.playAudio')} onPress={onPress}>
-      <PlayIcon color={colors.primary} />
-    </LibraryIconButton>
-  );
-};
-
-export const LibraryScreenPlay = ({
+export const PracticeScreenPlay = ({
   libraryId,
-  onClose,
+  onGraded,
 }: {
   libraryId: string;
-  onClose: () => void;
+  onGraded: (practiceId: string) => void;
 }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -43,10 +33,12 @@ export const LibraryScreenPlay = ({
   const library = useLibrary(libraryId);
   const createPractice = useCreatePractice();
   const createAnswer = useCreateAnswer();
+  const gradePractice = useGradePractice();
   const [index, setIndex] = useState(0);
   const [finished, setFinished] = useState(false);
   const [answer, setAnswer] = useState<AnswerFile | null>(null);
   const [practiceId, setPracticeId] = useState<string | null>(null);
+  const [phase, setPhase] = useState<PlayPhase>('answer');
   const questions = library.data?.questions ?? [];
   const question = questions[index];
 
@@ -76,10 +68,10 @@ export const LibraryScreenPlay = ({
   }
 
   const canAnswer = !question.audioUrl || finished;
-  const onPickAudio = async () => {
-    const result = await getDocumentAsync({ copyToCacheDirectory: true });
-    if (result.canceled) return;
-    const file = result.assets[0];
+  const onPickFile = async () => {
+    const picked = await getDocumentAsync({ copyToCacheDirectory: true });
+    if (picked.canceled) return;
+    const file = picked.assets[0];
     setAnswer({
       uri: file.uri,
       name: file.name,
@@ -100,36 +92,54 @@ export const LibraryScreenPlay = ({
       questionId: question.id,
     });
     if (index >= questions.length - 1) {
-      onClose();
+      setPhase('grade');
       return;
     }
     setIndex(index + 1);
+  };
+  const onGrade = async () => {
+    if (!practiceId) return;
+    await gradePractice.mutateAsync(practiceId);
+    onGraded(practiceId);
   };
 
   return (
     <AppScreen style={styles.screen}>
       <View style={styles.body}>
-        <Text style={styles.title}>
-          {t('library.questionLabel', { index: index + 1 })}
-        </Text>
-        {question.audioUrl ? (
-          <QuestionAudio
-            key={question.id}
-            audioUrl={question.audioUrl}
-            styles={styles}
-            onFinished={() => setFinished(true)}
-          />
-        ) : null}
-        <Text style={styles.content}>{question.content}</Text>
-        {question.hint ? <Text style={styles.hint}>{question.hint}</Text> : null}
-        {answer ? (
-          <Text style={styles.picked} numberOfLines={1} onPress={() => void onPickAudio()}>
-            {t('library.pickedAudio', { name: answer.name })}
-          </Text>
-        ) : null}
+        {phase === 'grade' ? (
+          <Text style={styles.hint}>{t('library.gradeReady')}</Text>
+        ) : (
+          <>
+            <Text style={styles.title}>
+              {t('library.questionLabel', { index: index + 1 })}
+            </Text>
+            {question.audioUrl ? (
+              <QuestionAudio
+                key={question.id}
+                audioUrl={question.audioUrl}
+                styles={styles}
+                onFinished={() => setFinished(true)}
+              />
+            ) : null}
+            <Text style={styles.content}>{question.content}</Text>
+            {question.hint ? <Text style={styles.hint}>{question.hint}</Text> : null}
+            {answer ? (
+              <Text style={styles.picked} numberOfLines={1} onPress={() => void onPickFile()}>
+                {t('library.pickedAudio', { name: answer.name })}
+              </Text>
+            ) : null}
+          </>
+        )}
       </View>
       <View style={styles.bar}>
-        {answer ? (
+        {phase === 'grade' ? (
+          <AppButton
+            label={t('library.grade')}
+            onPress={() => void onGrade()}
+            disabled={!practiceId}
+            style={styles.barButton}
+          />
+        ) : answer ? (
           <AppButton
             label={t('library.submit')}
             onPress={onSubmit}
@@ -139,7 +149,7 @@ export const LibraryScreenPlay = ({
         ) : (
           <AppButton
             label={t('library.pickAudio')}
-            onPress={() => void onPickAudio()}
+            onPress={() => void onPickFile()}
             disabled={!canAnswer}
             style={styles.barButton}
           />
@@ -188,9 +198,9 @@ const QuestionAudio = ({
       label={playing ? t('library.pauseAudio') : t('library.playAudio')}
       icon={
         playing ? (
-          <PauseIcon color={colors.primary} />
+          <PauseIcon color={colors.primary} size={16} />
         ) : (
-          <PlayIcon color={colors.primary} />
+          <PlayIcon color={colors.primary} size={16} />
         )
       }
       time={`${formatTime(status.currentTime)} / ${formatTime(status.duration)}`}
@@ -312,7 +322,7 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => {
     playButton: {
       width: 32,
       height: 32,
-      borderRadius: 8,
+      borderRadius: 16,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.border,

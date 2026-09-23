@@ -1,10 +1,10 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useCreateLibrary, useGenerateQuestion } from '@/api';
 import { AppButton, AppScreen, ConfirmModal, toast, useTheme } from '@/ui';
-import { DeleteIcon, GenerateIcon } from '@/ui/icon';
+import { DeleteIcon, GenerateIcon, PlusIcon } from '@/ui/icon';
 
 import {
   LibraryLayoutForm,
@@ -32,6 +32,8 @@ export const LibraryScreenCreate = ({ onClose }: { onClose: () => void }) => {
   const [title, setTitle] = useState('');
   const [questions, setQuestions] = useState<Draft[]>([]);
   const drafts = useRef(new Map<string, () => Draft>());
+  const listRef = useRef<ScrollView>(null);
+  const pendingScroll = useRef(false);
 
   const registerDraft = useCallback((key: string, getDraft: () => Draft) => {
     drafts.current.set(key, getDraft);
@@ -51,6 +53,14 @@ export const LibraryScreenCreate = ({ onClose }: { onClose: () => void }) => {
 
   const removeQuestion = useCallback((key: string) => {
     setQuestions((current) => current.filter((row) => row.key !== key));
+  }, []);
+
+  const addQuestion = useCallback(() => {
+    pendingScroll.current = true;
+    setQuestions((current) => [
+      ...current,
+      { key: nextQuestionKey(), content: '', hint: '' },
+    ]);
   }, []);
 
   const collectQuestions = () =>
@@ -97,13 +107,25 @@ export const LibraryScreenCreate = ({ onClose }: { onClose: () => void }) => {
           value={title}
           onChange={setTitle}
           action={
-            <LibraryIconButton label={t('library.generate')} onPress={onGenerate}>
-              <GenerateIcon color={colors.primary} />
-            </LibraryIconButton>
+            <View style={styles.actions}>
+              <LibraryIconButton label={t('library.generate')} onPress={onGenerate}>
+                <GenerateIcon color={colors.primary} />
+              </LibraryIconButton>
+              <LibraryIconButton label={t('library.addQuestion')} onPress={addQuestion}>
+                <PlusIcon color={colors.primary} />
+              </LibraryIconButton>
+            </View>
           }
         />
         <LibraryQuestionDragProvider onMove={onMove}>
-          <LibraryQuestionList>
+          <LibraryQuestionList
+            ref={listRef}
+            onContentSizeChange={() => {
+              if (!pendingScroll.current) return;
+              pendingScroll.current = false;
+              listRef.current?.scrollToEnd({ animated: true });
+            }}
+          >
             {questions.map((question, index) => (
               <CreateQuestion
                 key={question.key}
@@ -192,4 +214,5 @@ const RemoveQuestion = ({
 const screenStyle = { paddingBottom: 0 };
 const styles = StyleSheet.create({
   bar: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
 });

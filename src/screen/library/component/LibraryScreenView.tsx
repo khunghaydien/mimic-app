@@ -4,10 +4,9 @@ import { useTranslation } from 'react-i18next';
 
 import { canManageLibrary, useAuth, useLibrary } from '@/api';
 import { AppScreen, useTheme } from '@/ui';
-import { EditIcon } from '@/ui/icon';
+import { EditIcon, PlayIcon } from '@/ui/icon';
 
 import { LibraryIconButton } from './LibraryLayoutForm';
-import { LibraryScreenPlayButton } from './LibraryScreenPlay';
 
 export const LibraryScreenView = ({
   libraryId,
@@ -42,7 +41,9 @@ export const LibraryScreenView = ({
             <Text style={styles.sectionLabel}>{t('library.fieldTitle')}</Text>
             <View style={styles.actions}>
               {library.data.questions.length > 0 ? (
-                <LibraryScreenPlayButton onPress={onPlay} />
+                <LibraryIconButton label={t('library.playAudio')} onPress={onPlay}>
+                  <PlayIcon color={colors.primary} />
+                </LibraryIconButton>
               ) : null}
               {canManageLibrary(library.data.creator, user!) ? (
                 <LibraryIconButton label={t('library.edit')} onPress={onEdit}>

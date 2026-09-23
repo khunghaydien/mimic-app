@@ -5,6 +5,7 @@
   "tabs": {
     "home": "Trang chủ",
     "library": "Thư viện",
+    "practice": "Luyện tập",
     "setting": "Cài đặt"
   },
   "library": {
@@ -29,7 +30,24 @@
     "pickAudio": "Chọn file",
     "pickedAudio": "Đã chọn: {{name}}",
     "submit": "Nộp",
+    "grade": "Chấm điểm",
+    "gradeDone": "Xong",
+    "gradeReady": "Đã nộp hết câu hỏi. Bấm chấm điểm.",
+    "gradeCaption": "Lời thoại",
+    "gradeRelevance": "Liên quan",
+    "gradeVocabulary": "Từ vựng",
+    "gradeGrammar": "Ngữ pháp",
+    "gradeCompleteness": "Đầy đủ",
+    "gradeComment": "Nhận xét",
+    "gradeStrengths": "Điểm mạnh",
+    "gradeImprovements": "Cần cải thiện",
+    "gradeErrors": "Lỗi",
+    "gradeOriginal": "Câu gốc",
+    "gradeCorrection": "Sửa thành",
+    "gradeExplanation": "Giải thích",
+    "gradeMissing": "Thiếu",
     "generate": "Tạo câu hỏi",
+    "addQuestion": "Thêm câu hỏi",
     "save": "Lưu",
     "delete": "Xóa",
     "edit": "Sửa",
@@ -41,6 +59,14 @@
     "cancel": "Hủy",
     "errorTitle": "Tiêu đề không được trống",
     "errorQuestion": "Câu hỏi không được trống"
+  },
+  "practice": {
+    "title": "Luyện tập",
+    "playTitle": "Luyện tập",
+    "resultTitle": "Kết quả",
+    "empty": "Chưa có lần luyện tập",
+    "fieldLibrary": "Thư viện",
+    "score": "Điểm"
   },
   "home": {
     "hello": "Xin chào, {{name}}"

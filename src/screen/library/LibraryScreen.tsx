@@ -3,45 +3,38 @@ import { StyleSheet, View } from 'react-native';
 
 import { LibraryScreenCreate } from './component/LibraryScreenCreate';
 import { LibraryScreenList } from './component/LibraryScreenList';
-import { LibraryScreenPlay } from './component/LibraryScreenPlay';
 import { LibraryScreenUpdate } from './component/LibraryScreenUpdate';
 import { LibraryScreenView } from './component/LibraryScreenView';
 import type { LibraryScreenState } from './libraryScreenNav';
-
-export type { LibraryScreenState } from './libraryScreenNav';
-export { popLibraryScreen, resetLibraryScreen } from './libraryScreenNav';
 
 export const LibraryScreen = ({
   visible,
   screen,
   onScreenChange,
+  onPlay,
 }: {
   visible: boolean;
   screen: LibraryScreenState;
   onScreenChange: (screen: LibraryScreenState) => void;
+  onPlay: (libraryId: string) => void;
 }) => {
   const libraryId = 'libraryId' in screen ? screen.libraryId : '';
   const onClose = useCallback(
     () => onScreenChange({ status: 'list' }),
     [onScreenChange],
   );
-  const onPlay = useCallback(
-    () => onScreenChange({ status: 'play', libraryId }),
-    [libraryId, onScreenChange],
+  const onPlayPress = useCallback(
+    () => onPlay(libraryId),
+    [libraryId, onPlay],
   );
   const onEdit = useCallback(
     () => onScreenChange({ status: 'update', libraryId, from: 'view' }),
-    [libraryId, onScreenChange],
-  );
-  const onPlayClose = useCallback(
-    () => onScreenChange({ status: 'view', libraryId }),
     [libraryId, onScreenChange],
   );
 
   const listHidden = screen.status !== 'list';
   const viewOpen =
     screen.status === 'view' ||
-    screen.status === 'play' ||
     (screen.status === 'update' && screen.from === 'view');
   const viewHidden = screen.status !== 'view';
 
@@ -64,7 +57,7 @@ export const LibraryScreen = ({
         >
           <LibraryScreenView
             libraryId={libraryId}
-            onPlay={onPlay}
+            onPlay={onPlayPress}
             onEdit={onEdit}
           />
         </View>
@@ -77,11 +70,6 @@ export const LibraryScreen = ({
       {screen.status === 'update' ? (
         <View style={styles.overlay}>
           <LibraryScreenUpdate libraryId={libraryId} />
-        </View>
-      ) : null}
-      {screen.status === 'play' ? (
-        <View style={styles.overlay}>
-          <LibraryScreenPlay libraryId={libraryId} onClose={onPlayClose} />
         </View>
       ) : null}
     </View>

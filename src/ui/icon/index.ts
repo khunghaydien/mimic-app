@@ -1,4 +1,5 @@
 export { BackIcon } from './BackIcon';
+export { CaptionIcon } from './CaptionIcon';
 export { CloseIcon } from './CloseIcon';
 export { DeleteIcon } from './DeleteIcon';
 export { EditIcon } from './EditIcon';
@@ -10,6 +11,8 @@ export { LogoutIcon } from './LogoutIcon';
 export { MenuIcon } from './MenuIcon';
 export { PauseIcon } from './PauseIcon';
 export { PlayIcon } from './PlayIcon';
+export { PlusIcon } from './PlusIcon';
+export { PracticeIcon } from './PracticeIcon';
 export { SaveIcon } from './SaveIcon';
 export { SettingIcon } from './SettingIcon';
 export { SpeakerIcon } from './SpeakerIcon';
